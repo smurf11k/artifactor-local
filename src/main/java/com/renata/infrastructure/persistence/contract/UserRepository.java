@@ -6,9 +6,7 @@ import com.renata.infrastructure.persistence.Repository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Інтерфейс репозиторію для специфічних операцій з користувачами.
- */
+/** Інтерфейс репозиторію для специфічних операцій з користувачами. */
 public interface UserRepository extends Repository<User, UUID> {
 
     /**

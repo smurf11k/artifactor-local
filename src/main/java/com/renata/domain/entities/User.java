@@ -1,16 +1,14 @@
 package com.renata.domain.entities;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Objects;
-import java.util.UUID;
-
-/**
- * Сутність, що представляє користувача системи.
- */
+/** Сутність, що представляє користувача системи. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,7 +19,7 @@ public class User implements Comparable<User> {
     private String username;
     private String passwordHash;
     private String email;
-    private String avatarPath;
+    private Role role;
 
     @Override
     public boolean equals(Object o) {
@@ -38,7 +36,45 @@ public class User implements Comparable<User> {
 
     @Override
     public int compareTo(User other) {
-        // Compare by username
         return this.username.compareToIgnoreCase(other.username);
+    }
+
+    @Getter
+    public enum Role {
+        ADMIN(
+                "admin",
+                Map.of(
+                        EntityName.ITEM, new Permission(true, true, true, true),
+                        EntityName.COLLECTION, new Permission(true, true, true, true),
+                        EntityName.TRANSACTION, new Permission(true, true, true, true),
+                        EntityName.MARKET, new Permission(true, true, true, true),
+                        EntityName.USER, new Permission(true, true, true, true))),
+        GENERAL(
+                "general",
+                Map.of(
+                        EntityName.ITEM, new Permission(true, true, false, true),
+                        EntityName.COLLECTION, new Permission(true, true, true, true),
+                        EntityName.TRANSACTION, new Permission(true, false, false, true),
+                        EntityName.MARKET, new Permission(false, false, false, true),
+                        EntityName.USER, new Permission(true, false, false, true)));
+
+        private final String name;
+        private final Map<EntityName, Permission> permissions;
+
+        Role(String name, Map<EntityName, Permission> permissions) {
+            this.name = name;
+            this.permissions = permissions;
+        }
+
+        public enum EntityName {
+            ITEM,
+            COLLECTION,
+            TRANSACTION,
+            MARKET,
+            USER
+        }
+
+        public record Permission(
+                boolean canAdd, boolean canEdit, boolean canDelete, boolean canRead) {}
     }
 }

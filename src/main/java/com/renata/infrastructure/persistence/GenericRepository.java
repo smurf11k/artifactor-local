@@ -1,9 +1,5 @@
 package com.renata.infrastructure.persistence;
 
-
-import com.renata.domain.enums.AntiqueType;
-import com.renata.domain.enums.ItemCondition;
-import com.renata.domain.enums.TransactionType;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.exception.EntityMappingException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
@@ -16,7 +12,7 @@ import java.util.function.Function;
 /**
  * Абстрактний клас для загальних операцій з базою даних.
  *
- * @param <T>  тип сутності
+ * @param <T> тип сутності
  * @param <ID> тип ідентифікатора сутності
  */
 public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
@@ -29,15 +25,15 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
      * Конструктор репозиторію.
      *
      * @param connectionPool пул з'єднань до бази даних
-     * @param entityClass    клас сутності
-     * @param tableName      назва таблиці в базі даних
+     * @param entityClass клас сутності
+     * @param tableName назва таблиці в базі даних
      */
-    protected GenericRepository(ConnectionPool connectionPool, Class<T> entityClass, String tableName) {
+    protected GenericRepository(
+            ConnectionPool connectionPool, Class<T> entityClass, String tableName) {
         this.connectionPool = connectionPool;
         this.entityClass = entityClass;
         this.tableName = tableName;
     }
-
 
     /**
      * Пошук сутності за ідентифікатором.
@@ -54,7 +50,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
      * Пошук сутностей за значенням поля.
      *
      * @param fieldName назва поля
-     * @param value     значення поля
+     * @param value значення поля
      * @return список знайдених сутностей
      */
     @Override
@@ -66,16 +62,22 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Пошук усіх сутностей із кастомним SQL-запитом, фільтрацією, сортуванням і пагінацією.
      *
-     * @param filter      фільтр для вибірки та пошуку (може бути null)
-     * @param sortBy      поле для сортування (може бути null)
+     * @param filter фільтр для вибірки та пошуку (може бути null)
+     * @param sortBy поле для сортування (може бути null)
      * @param isAscending напрямок сортування (true - за зростанням)
-     * @param offset      зміщення для пагінації
-     * @param limit       ліміт кількості записів
-     * @param baseSql     базовий SQL-запит (наприклад, із JOIN)
+     * @param offset зміщення для пагінації
+     * @param limit ліміт кількості записів
+     * @param baseSql базовий SQL-запит (наприклад, із JOIN)
      * @return список знайдених сутностей
      */
     @Override
-    public List<T> findAll(Filter filter, String sortBy, boolean isAscending, int offset, int limit, String baseSql) {
+    public List<T> findAll(
+            Filter filter,
+            String sortBy,
+            boolean isAscending,
+            int offset,
+            int limit,
+            String baseSql) {
         StringJoiner sql = new StringJoiner(" ");
         sql.add(baseSql);
         List<Object> parameters = new ArrayList<>();
@@ -98,16 +100,23 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Пошук усіх сутностей з фільтрацією, пошуком, сортуванням і пагінацією.
      *
-     * @param filter      фільтр для вибірки та пошуку (може бути null)
-     * @param sortBy      поле для сортування (може бути null)
+     * @param filter фільтр для вибірки та пошуку (може бути null)
+     * @param sortBy поле для сортування (може бути null)
      * @param isAscending напрямок сортування (true - за зростанням)
-     * @param offset      зміщення для пагінації
-     * @param limit       ліміт кількості записів
+     * @param offset зміщення для пагінації
+     * @param limit ліміт кількості записів
      * @return список знайдених сутностей
      */
     @Override
-    public List<T> findAll(Filter filter, String sortBy, boolean isAscending, int offset, int limit) {
-        return findAll(filter, sortBy, isAscending, offset, limit, String.format("SELECT * FROM %s", tableName));
+    public List<T> findAll(
+            Filter filter, String sortBy, boolean isAscending, int offset, int limit) {
+        return findAll(
+                filter,
+                sortBy,
+                isAscending,
+                offset,
+                limit,
+                String.format("SELECT * FROM %s", tableName));
     }
 
     /**
@@ -118,24 +127,25 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     @Override
     public List<T> findAll() {
         String sql = String.format("SELECT * FROM %s", tableName);
-        return executeQuery(sql, stmt -> {
-        });
+        return executeQuery(sql, stmt -> {});
     }
 
     /**
      * Пошук усіх сутностей з пагінацією.
      *
      * @param offset зміщення для пагінації
-     * @param limit  ліміт кількості записів
+     * @param limit ліміт кількості записів
      * @return список знайдених сутностей
      */
     @Override
     public List<T> findAll(int offset, int limit) {
         String sql = String.format("SELECT * FROM %s LIMIT ? OFFSET ?", tableName);
-        return executeQuery(sql, stmt -> {
-            stmt.setInt(1, limit);
-            stmt.setInt(2, offset);
-        });
+        return executeQuery(
+                sql,
+                stmt -> {
+                    stmt.setInt(1, limit);
+                    stmt.setInt(2, offset);
+                });
     }
 
     /**
@@ -152,7 +162,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Перевантажений метод count для роботи з іншою таблицею.
      *
-     * @param filter    фільтр для вибірки
+     * @param filter фільтр для вибірки
      * @param tableName назва таблиці
      * @return кількість записів
      */
@@ -168,13 +178,14 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
         }
 
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+                PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             setParameters(statement, parameters);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? resultSet.getLong(1) : 0;
             }
         } catch (SQLException e) {
-            throw new DatabaseAccessException("Помилка підрахунку записів у таблиці " + tableName, e);
+            throw new DatabaseAccessException(
+                    "Помилка підрахунку записів у таблиці " + tableName, e);
         }
     }
 
@@ -187,8 +198,8 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     public long count() {
         String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet resultSet = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
             return resultSet.next() ? resultSet.getLong(1) : 0;
         } catch (SQLException e) {
             throw new DatabaseAccessException("Помилка підрахунку записів", e);
@@ -198,9 +209,9 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Групування сутностей за агрегаційною функцією.
      *
-     * @param aggregation  агрегаційна функція
+     * @param aggregation агрегаційна функція
      * @param resultMapper функція для зіставлення результатів
-     * @param <R>          тип результату
+     * @param <R> тип результату
      * @return список результатів групування
      */
     @Override
@@ -211,8 +222,8 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
         String sql = String.format("%s FROM %s%s", selectClause, tableName, groupByClause);
 
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet resultSet = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
             List<R> results = new ArrayList<>();
             while (resultSet.next()) {
                 results.add(resultMapper.apply(resultSet));
@@ -251,7 +262,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
 
         String sql = buildInsertSql(entities.getFirst());
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             for (T entity : entities) {
                 List<Object> values = extractEntityValues(entity);
                 setParameters(statement, values);
@@ -268,7 +279,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Оновлення сутності.
      *
-     * @param id     ідентифікатор сутності
+     * @param id ідентифікатор сутності
      * @param entity сутність з новими даними
      * @return оновлена сутність
      */
@@ -295,7 +306,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
 
         String sql = buildUpdateSql();
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             for (Map.Entry<ID, T> entry : entities.entrySet()) {
                 List<Object> values = extractEntityValues(entry.getValue());
                 values.add(entry.getKey());
@@ -334,7 +345,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
 
         String sql = String.format("DELETE FROM %s WHERE id = ?", tableName);
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             for (ID id : ids) {
                 statement.setObject(1, id);
                 statement.addBatch();
@@ -354,7 +365,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
      */
     protected List<T> executeQuery(String sql, ParameterSetter parameterSetter) {
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             parameterSetter.setParameters(statement);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<T> entities = new ArrayList<>();
@@ -371,15 +382,16 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Виконує SQL-запит і повертає список об'єктів із зіставленням результатів.
      *
-     * @param sql             SQL-запит
+     * @param sql SQL-запит
      * @param parameterSetter функція для встановлення параметрів
-     * @param mapper          функція для зіставлення ResultSet
-     * @param <R>             тип результату
+     * @param mapper функція для зіставлення ResultSet
+     * @param <R> тип результату
      * @return список об'єктів
      */
-    protected <R> List<R> executeQuery(String sql, ParameterSetter parameterSetter, RowMapper<R> mapper) {
+    protected <R> List<R> executeQuery(
+            String sql, ParameterSetter parameterSetter, RowMapper<R> mapper) {
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             parameterSetter.setParameters(statement);
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<R> results = new ArrayList<>();
@@ -396,12 +408,12 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Виконує SQL-запит для оновлення або вставки.
      *
-     * @param sql        SQL-запит
+     * @param sql SQL-запит
      * @param parameters параметри запиту
      */
     protected void executeUpdate(String sql, List<Object> parameters) {
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             setParameters(statement, parameters);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -412,11 +424,12 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Встановлює параметри для PreparedStatement.
      *
-     * @param statement  підготовлений запит
+     * @param statement підготовлений запит
      * @param parameters список параметрів
      * @throws SQLException якщо виникає помилка при встановленні параметрів
      */
-    protected void setParameters(PreparedStatement statement, List<Object> parameters) throws SQLException {
+    protected void setParameters(PreparedStatement statement, List<Object> parameters)
+            throws SQLException {
         for (int i = 0; i < parameters.size(); i++) {
             statement.setObject(i + 1, parameters.get(i));
         }
@@ -455,7 +468,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Витягує значення полів сутності для SQL-запиту.
      *
-     * @param entity    сутність
+     * @param entity сутність
      * @param includeId чи включати поле id
      * @return список значень полів
      */
@@ -522,7 +535,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     /**
      * Конвертація значення з бази даних у тип поля сутності.
      *
-     * @param value      значення з бази даних
+     * @param value значення з бази даних
      * @param targetType тип поля сутності
      * @return сконвертоване значення
      */
@@ -537,10 +550,14 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
 
         return switch (targetType.getName()) {
             case "java.lang.String" -> value.toString();
-            case "java.util.UUID" -> value instanceof String ? UUID.fromString((String) value) : value;
+            case "java.util.UUID" ->
+                    value instanceof String ? UUID.fromString((String) value) : value;
             case "java.lang.Integer", "int" ->
-                value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
-            case "java.time.LocalDateTime" -> value instanceof Timestamp ? ((Timestamp) value).toLocalDateTime() : null;
+                    value instanceof Number
+                            ? ((Number) value).intValue()
+                            : Integer.parseInt(value.toString());
+            case "java.time.LocalDateTime" ->
+                    value instanceof Timestamp ? ((Timestamp) value).toLocalDateTime() : null;
 
             default -> value;
         };
@@ -594,13 +611,13 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
             idField.setAccessible(true);
             return idField.get(entity);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException("Не вдалося отримати ідентифікатор для " + entity.getClass().getSimpleName(), e);
+            throw new IllegalStateException(
+                    "Не вдалося отримати ідентифікатор для " + entity.getClass().getSimpleName(),
+                    e);
         }
     }
 
-    /**
-     * Функціональний інтерфейс для встановлення параметрів PreparedStatement.
-     */
+    /** Функціональний інтерфейс для встановлення параметрів PreparedStatement. */
     @FunctionalInterface
     protected interface ParameterSetter {
         void setParameters(PreparedStatement statement) throws SQLException;

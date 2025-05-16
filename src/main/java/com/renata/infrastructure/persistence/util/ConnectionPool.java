@@ -10,8 +10,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Пул з'єднань для управління JDBC-з'єднаннями з H2 базою даних.
- * Використовує Proxy для перевизначення close, повертаючи з'єднання в пул.
+ * Пул з'єднань для управління JDBC-з'єднаннями з H2 базою даних. Використовує Proxy для
+ * перевизначення close, повертаючи з'єднання в пул.
  */
 public class ConnectionPool {
     private final BlockingQueue<Connection> availableConnections;
@@ -47,16 +47,17 @@ public class ConnectionPool {
     private Connection createProxyConnection() throws SQLException {
         Connection connection = DriverManager.getConnection(url, user, password);
         connection.setAutoCommit(autoCommit);
-        return (Connection) Proxy.newProxyInstance(
-            ConnectionPool.class.getClassLoader(),
-            new Class[]{Connection.class},
-            (proxy, method, args) -> {
-                if ("close".equals(method.getName())) {
-                    availableConnections.offer((Connection) proxy);
-                    return null;
-                }
-                return method.invoke(connection, args);
-            });
+        return (Connection)
+                Proxy.newProxyInstance(
+                        ConnectionPool.class.getClassLoader(),
+                        new Class[] {Connection.class},
+                        (proxy, method, args) -> {
+                            if ("close".equals(method.getName())) {
+                                availableConnections.offer((Connection) proxy);
+                                return null;
+                            }
+                            return method.invoke(connection, args);
+                        });
     }
 
     public Connection getConnection() {
@@ -111,12 +112,19 @@ public class ConnectionPool {
 
         public static PoolConfig fromProperties(Properties properties) {
             return new Builder()
-                .withUrl(properties.getProperty("db.url", DEFAULT_URL))
-                .withUser(properties.getProperty("db.username", DEFAULT_USER))
-                .withPassword(properties.getProperty("db.password", DEFAULT_PASSWORD))
-                .withMaxConnections(Integer.parseInt(properties.getProperty("db.pool.size", String.valueOf(DEFAULT_MAX_CONNECTIONS))))
-                .withAutoCommit(Boolean.parseBoolean(properties.getProperty("db.auto.commit", String.valueOf(DEFAULT_AUTO_COMMIT))))
-                .build();
+                    .withUrl(properties.getProperty("db.url", DEFAULT_URL))
+                    .withUser(properties.getProperty("db.username", DEFAULT_USER))
+                    .withPassword(properties.getProperty("db.password", DEFAULT_PASSWORD))
+                    .withMaxConnections(
+                            Integer.parseInt(
+                                    properties.getProperty(
+                                            "db.pool.size",
+                                            String.valueOf(DEFAULT_MAX_CONNECTIONS))))
+                    .withAutoCommit(
+                            Boolean.parseBoolean(
+                                    properties.getProperty(
+                                            "db.auto.commit", String.valueOf(DEFAULT_AUTO_COMMIT))))
+                    .build();
         }
 
         public static class Builder {

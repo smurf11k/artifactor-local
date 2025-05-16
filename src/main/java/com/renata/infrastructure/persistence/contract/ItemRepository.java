@@ -7,9 +7,7 @@ import com.renata.infrastructure.persistence.Repository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Інтерфейс репозиторію для специфічних операцій з антикваріатом.
- */
+/** Інтерфейс репозиторію для специфічних операцій з антикваріатом. */
 public interface ItemRepository extends Repository<Item, UUID> {
 
     /**
@@ -51,7 +49,7 @@ public interface ItemRepository extends Repository<Item, UUID> {
      * @param endYear кінцевий рік
      * @return список антикваріату
      */
-    List<Item> findByYearRange(Integer startYear, Integer endYear);
+    List<Item> findByProductionYearRange(Integer startYear, Integer endYear);
 
     /**
      * Пошук антикваріату старішого за заданий рік.

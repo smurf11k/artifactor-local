@@ -14,9 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Реалізація сервісу для роботи зі зберіганням файлів, зокрема зображень.
- */
+/** Реалізація сервісу для роботи зі зберіганням файлів, зокрема зображень. */
 public class FileStorageServiceImpl implements FileStorageService {
 
     private final Path storageRoot;
@@ -26,25 +24,26 @@ public class FileStorageServiceImpl implements FileStorageService {
     /**
      * Конструктор із конфігурацією кореневої директорії та дозволених розширень.
      *
-     * @param storageRootPath   шлях до кореневої директорії для зберігання файлів
+     * @param storageRootPath шлях до кореневої директорії для зберігання файлів
      * @param allowedExtensions набір дозволених розширень файлів (наприклад, "jpg", "png")
-     * @param maxFileSize       максимальний розмір файлу у байтах
+     * @param maxFileSize максимальний розмір файлу у байтах
      */
-    public FileStorageServiceImpl(String storageRootPath, String[] allowedExtensions, long maxFileSize) {
+    public FileStorageServiceImpl(
+            String storageRootPath, String[] allowedExtensions, long maxFileSize) {
         this.storageRoot = Paths.get(storageRootPath).toAbsolutePath().normalize();
         this.allowedExtensions = new HashSet<>(Arrays.asList(allowedExtensions));
         this.maxFileSize = maxFileSize;
         initializeStorage();
     }
 
-    /**
-     * Ініціалізація директорії для зберігання файлів.
-     */
+    /** Ініціалізація директорії для зберігання файлів. */
     private void initializeStorage() {
         try {
             Files.createDirectories(storageRoot);
         } catch (IOException e) {
-            throw new FileStorageException("Не вдалося ініціалізувати директорію для зберігання файлів: " + storageRoot, e);
+            throw new FileStorageException(
+                    "Не вдалося ініціалізувати директорію для зберігання файлів: " + storageRoot,
+                    e);
         }
     }
 
@@ -52,8 +51,8 @@ public class FileStorageServiceImpl implements FileStorageService {
      * Зберігає файл у вказаній директорії та повертає шлях до нього.
      *
      * @param inputStream потік даних файлу
-     * @param fileName    ім’я файлу (з розширенням)
-     * @param entityId    ідентифікатор сутності (наприклад, аудіокниги)
+     * @param fileName ім’я файлу (з розширенням)
+     * @param entityId ідентифікатор сутності (наприклад, аудіокниги)
      * @return шлях до збереженого файлу
      * @throws FileStorageException якщо сталася помилка під час збереження
      */
@@ -138,7 +137,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             Files.createDirectories(entityDir);
             return entityDir;
         } catch (IOException e) {
-            throw new FileStorageException("Помилка створення директорії для сутності: " + entityDir, e);
+            throw new FileStorageException(
+                    "Помилка створення директорії для сутності: " + entityDir, e);
         }
     }
 

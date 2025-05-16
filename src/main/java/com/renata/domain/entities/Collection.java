@@ -1,17 +1,14 @@
 package com.renata.domain.entities;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
-
-/**
- * Сутність, що представляє колекцію антикваріату користувача.
- */
+/** Сутність, що представляє колекцію антикваріату користувача. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,13 +35,10 @@ public class Collection implements Comparable<Collection> {
 
     @Override
     public int compareTo(Collection other) {
-        // First compare by name
         int nameComparison = this.name.compareToIgnoreCase(other.name);
         if (nameComparison != 0) {
             return nameComparison;
         }
-
-        // If names are equal, compare by creation date (newer first)
         return other.createdAt.compareTo(this.createdAt);
     }
 }

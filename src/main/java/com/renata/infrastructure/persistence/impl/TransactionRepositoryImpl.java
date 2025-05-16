@@ -6,18 +6,16 @@ import com.renata.infrastructure.persistence.GenericRepository;
 import com.renata.infrastructure.persistence.contract.TransactionRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
-import org.springframework.stereotype.Repository;
-
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Repository;
 
-/**
- * Реалізація репозиторію для специфічних операцій з транзакціями.
- */
+/** Реалізація репозиторію для специфічних операцій з транзакціями. */
 @Repository
-public class TransactionRepositoryImpl extends GenericRepository<Transaction, UUID> implements TransactionRepository {
+public class TransactionRepositoryImpl extends GenericRepository<Transaction, UUID>
+        implements TransactionRepository {
 
     /**
      * Конструктор репозиторію.
@@ -70,11 +68,16 @@ public class TransactionRepositoryImpl extends GenericRepository<Transaction, UU
      */
     @Override
     public List<Transaction> findByDateRange(LocalDateTime from, LocalDateTime to) {
-        String sql = "SELECT * FROM transactions WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC";
-        return executeQuery(sql, stmt -> {
-            stmt.setTimestamp(1, Timestamp.valueOf(from));
-            stmt.setTimestamp(2, Timestamp.valueOf(to));
-        }, this::mapResultSetToTransaction);
+        String sql =
+                "SELECT * FROM transactions WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp"
+                        + " DESC";
+        return executeQuery(
+                sql,
+                stmt -> {
+                    stmt.setTimestamp(1, Timestamp.valueOf(from));
+                    stmt.setTimestamp(2, Timestamp.valueOf(to));
+                },
+                this::mapResultSetToTransaction);
     }
 
     /**
@@ -87,10 +90,13 @@ public class TransactionRepositoryImpl extends GenericRepository<Transaction, UU
     @Override
     public List<Transaction> findByUserAndType(UUID userId, TransactionType type) {
         String sql = "SELECT * FROM transactions WHERE user_id = ? AND type = ?";
-        return executeQuery(sql, stmt -> {
-            stmt.setObject(1, userId);
-            stmt.setString(2, type.name());
-        }, this::mapResultSetToTransaction);
+        return executeQuery(
+                sql,
+                stmt -> {
+                    stmt.setObject(1, userId);
+                    stmt.setString(2, type.name());
+                },
+                this::mapResultSetToTransaction);
     }
 
     /**
@@ -103,7 +109,9 @@ public class TransactionRepositoryImpl extends GenericRepository<Transaction, UU
         try {
             Transaction transaction = new Transaction();
             transaction.setId(rs.getObject("id", UUID.class));
-            transaction.setType(TransactionType.valueOf(rs.getString("type")));
+            transaction.setType(
+                    TransactionType.valueOf(
+                            rs.getString("type"))); // TODO: maybe change to transaction_type
             transaction.setUserId(rs.getObject("user_id", UUID.class));
             transaction.setItemId(rs.getObject("item_id", UUID.class));
 

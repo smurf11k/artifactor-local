@@ -10,22 +10,18 @@ import java.util.function.Function;
 /**
  * Інтерфейс для загальних операцій з репозиторієм.
  *
- * @param <T>  тип сутності
+ * @param <T> тип сутності
  * @param <ID> тип ідентифікатора сутності
  */
 public interface Repository<T, ID> {
 
-    /**
-     * Функціональний інтерфейс для визначення умов фільтрації та пошуку.
-     */
+    /** Функціональний інтерфейс для визначення умов фільтрації та пошуку. */
     @FunctionalInterface
     interface Filter {
         void apply(StringJoiner whereClause, List<Object> parameters);
     }
 
-    /**
-     * Функціональний інтерфейс для визначення агрегаційних функцій.
-     */
+    /** Функціональний інтерфейс для визначення агрегаційних функцій. */
     @FunctionalInterface
     interface Aggregation {
         void apply(StringJoiner selectClause, StringJoiner groupByClause);
@@ -53,7 +49,7 @@ public interface Repository<T, ID> {
      * Пошук сутностей за значенням поля.
      *
      * @param fieldName назва поля
-     * @param value     значення поля
+     * @param value значення поля
      * @return список знайдених сутностей
      */
     List<T> findByField(String fieldName, Object value);
@@ -61,24 +57,30 @@ public interface Repository<T, ID> {
     /**
      * Пошук усіх сутностей із кастомним SQL-запитом, фільтрацією, сортуванням і пагінацією.
      *
-     * @param filter      фільтр для вибірки та пошуку (може бути null)
-     * @param sortBy      поле для сортування (може бути null)
+     * @param filter фільтр для вибірки та пошуку (може бути null)
+     * @param sortBy поле для сортування (може бути null)
      * @param isAscending напрямок сортування (true - за зростанням)
-     * @param offset      зміщення для пагінації
-     * @param limit       ліміт кількості записів
-     * @param baseSql     базовий SQL-запит (наприклад, із JOIN)
+     * @param offset зміщення для пагінації
+     * @param limit ліміт кількості записів
+     * @param baseSql базовий SQL-запит (наприклад, із JOIN)
      * @return список знайдених сутностей
      */
-    List<T> findAll(Filter filter, String sortBy, boolean isAscending, int offset, int limit, String baseSql);
+    List<T> findAll(
+            Filter filter,
+            String sortBy,
+            boolean isAscending,
+            int offset,
+            int limit,
+            String baseSql);
 
     /**
      * Пошук усіх сутностей з фільтрацією, пошуком, сортуванням і пагінацією.
      *
-     * @param filter      фільтр для вибірки та пошуку (може бути null)
-     * @param sortBy      поле для сортування (може бути null)
+     * @param filter фільтр для вибірки та пошуку (може бути null)
+     * @param sortBy поле для сортування (може бути null)
      * @param isAscending напрямок сортування (true - за зростанням)
-     * @param offset      зміщення для пагінації
-     * @param limit       ліміт кількості записів
+     * @param offset зміщення для пагінації
+     * @param limit ліміт кількості записів
      * @return список знайдених сутностей
      */
     List<T> findAll(Filter filter, String sortBy, boolean isAscending, int offset, int limit);
@@ -87,7 +89,7 @@ public interface Repository<T, ID> {
      * Пошук усіх сутностей з пагінацією.
      *
      * @param offset зміщення для пагінації
-     * @param limit  ліміт кількості записів
+     * @param limit ліміт кількості записів
      * @return список знайдених сутностей
      */
     List<T> findAll(int offset, int limit);
@@ -115,12 +117,11 @@ public interface Repository<T, ID> {
     long count();
 
     /**
-     * TODO: use groupBy somewhere
-     * Групування сутностей за агрегаційною функцією.
+     * TODO: use groupBy somewhere Групування сутностей за агрегаційною функцією.
      *
-     * @param aggregation  агрегаційна функція
+     * @param aggregation агрегаційна функція
      * @param resultMapper функція для зіставлення результатів
-     * @param <R>          тип результату
+     * @param <R> тип результату
      * @return список результатів групування
      */
     <R> List<R> groupBy(Aggregation aggregation, Function<ResultSet, R> resultMapper);
@@ -144,7 +145,7 @@ public interface Repository<T, ID> {
     /**
      * Оновлення сутності.
      *
-     * @param id     ідентифікатор сутності
+     * @param id ідентифікатор сутності
      * @param entity сутність з новими даними
      * @return оновлена сутність
      */

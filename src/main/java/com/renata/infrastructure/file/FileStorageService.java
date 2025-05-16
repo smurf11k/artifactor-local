@@ -5,17 +5,15 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.UUID;
 
-/**
- * Інтерфейс для роботи зі зберіганням файлів.
- */
+/** Інтерфейс для роботи зі зберіганням файлів. */
 public interface FileStorageService {
 
     /**
      * Зберігає файл у вказаній директорії та повертає шлях до нього.
      *
      * @param inputStream потік даних файлу
-     * @param fileName    ім’я файлу (з розширенням)
-     * @param entityId    ідентифікатор сутності (наприклад, аудіокниги)
+     * @param fileName ім’я файлу (з розширенням)
+     * @param entityId ідентифікатор сутності (наприклад, аудіокниги)
      * @return шлях до збереженого файлу
      * @throws FileStorageException якщо сталася помилка під час збереження
      */

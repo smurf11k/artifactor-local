@@ -6,9 +6,7 @@ import com.renata.infrastructure.persistence.Repository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Інтерфейс репозиторію для специфічних операцій з колекціями.
- */
+/** Інтерфейс репозиторію для специфічних операцій з колекціями. */
 public interface CollectionRepository extends Repository<Collection, UUID> {
 
     /**
@@ -39,7 +37,7 @@ public interface CollectionRepository extends Repository<Collection, UUID> {
      * Прикріплення антикваріату до колекції.
      *
      * @param collectionId ідентифікатор колекції
-     * @param itemId  ідентифікатор антикваріату
+     * @param itemId ідентифікатор антикваріату
      */
     void attachItemToCollection(UUID collectionId, UUID itemId);
 
@@ -47,7 +45,7 @@ public interface CollectionRepository extends Repository<Collection, UUID> {
      * Від'єднання антикваріату від колекції.
      *
      * @param collectionId ідентифікатор колекції
-     * @param itemId  ідентифікатор антикваріату
+     * @param itemId ідентифікатор антикваріату
      */
     void detachItemFromCollection(UUID collectionId, UUID itemId);
 

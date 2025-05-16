@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<BorderPane fx:id="root" xmlns:fx="http://javafx.com/fxml"
+  fx:controller="com.renata.presentation.controller.MainController">
+  <fx:define>
+    <ToggleGroup fx:id="toggleGroup" />
+  </fx:define>
+  <left>
+    <VBox spacing="10" styleClass="menu">
+      <ToggleButton text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection">
+        <graphic>
+          <FontIcon iconLiteral="bx-door-open" />
+        </graphic>
+      </ToggleButton>
+
+      <ToggleButton text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection">
+        <graphic>
+          <FontIcon iconLiteral="bx-user-plus" />
+        </graphic>
+      </ToggleButton>
+
+      <ToggleButton text="Список користувачів" toggleGroup="$toggleGroup"
+        onAction="#handleMenuSelection">
+        <graphic>
+          <FontIcon iconLiteral="bx-list-ul" />
+        </graphic>
+      </ToggleButton>
+    </VBox>
+  </left>
+  <center>
+    <!-- Вузол, який буде оновлюватися -->
+    <fx:include source="user/SignIn.fxml" />
+  </center>
+</BorderPane>

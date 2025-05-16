@@ -7,9 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Інтерфейс репозиторію для специфічних операцій з транзакціями.
- */
+/** Інтерфейс репозиторію для специфічних операцій з транзакціями. */
 public interface TransactionRepository extends Repository<Transaction, UUID> {
 
     /**

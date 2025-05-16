@@ -11,18 +11,17 @@ import com.renata.infrastructure.persistence.contract.UserRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
 import jakarta.annotation.PostConstruct;
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 /**
- * Реалізація патерну Unit of Work для управління транзакціями та змінами сутностей.
- * Відстежує створені, оновлені та видалені сутності, застосовуючи зміни в одній транзакції.
+ * Реалізація патерну Unit of Work для управління транзакціями та змінами сутностей. Відстежує
+ * створені, оновлені та видалені сутності, застосовуючи зміни в одній транзакції.
  */
 @Component
 public class PersistenceContext {
@@ -30,7 +29,7 @@ public class PersistenceContext {
     private final ConnectionPool connectionPool;
     private final ItemRepository itemRepository;
     private final TransactionRepository transactionRepository;
-    //private final AuthorRepository authorRepository;
+    // private final AuthorRepository authorRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
     private Connection connection;
@@ -44,16 +43,17 @@ public class PersistenceContext {
      *
      * @param connectionPool пул з'єднань для управління з'єднаннями
      */
-    public PersistenceContext(ConnectionPool connectionPool,
-        ItemRepository itemRepository,
-        TransactionRepository transactionRepository,
-        //AuthorRepository authorRepository,
-        CollectionRepository collectionRepository,
-        UserRepository userRepository) {
+    public PersistenceContext(
+            ConnectionPool connectionPool,
+            ItemRepository itemRepository,
+            TransactionRepository transactionRepository,
+            // AuthorRepository authorRepository,
+            CollectionRepository collectionRepository,
+            UserRepository userRepository) {
         this.connectionPool = connectionPool;
         this.itemRepository = itemRepository;
         this.transactionRepository = transactionRepository;
-        //this.authorRepository = authorRepository;
+        // this.authorRepository = authorRepository;
         this.collectionRepository = collectionRepository;
         this.userRepository = userRepository;
 
@@ -67,7 +67,7 @@ public class PersistenceContext {
     @PostConstruct
     private void init() {
         this.registerRepository(Item.class, itemRepository);
-        //this.registerRepository(Author.class, authorRepository);
+        // this.registerRepository(Author.class, authorRepository);
         this.registerRepository(Transaction.class, transactionRepository);
         this.registerRepository(Collection.class, collectionRepository);
         this.registerRepository(User.class, userRepository);
@@ -77,7 +77,7 @@ public class PersistenceContext {
      * Реєстрація репозиторію для певного типу сутності.
      *
      * @param entityClass клас сутності
-     * @param repository  репозиторій для роботи з сутністю
+     * @param repository репозиторій для роботи з сутністю
      */
     public <T, ID> void registerRepository(Class<T> entityClass, Repository<T, ID> repository) {
         repositories.put(entityClass, repository);
@@ -98,7 +98,7 @@ public class PersistenceContext {
     /**
      * Реєстрація сутності для оновлення.
      *
-     * @param id     ідентифікатор сутності
+     * @param id ідентифікатор сутності
      * @param entity сутність з новими даними
      */
     public void registerUpdated(Object id, Object entity) {
@@ -120,9 +120,7 @@ public class PersistenceContext {
         deletedEntities.add(entity);
     }
 
-    /**
-     * Застосування всіх зареєстрованих змін у транзакції.
-     */
+    /** Застосування всіх зареєстрованих змін у транзакції. */
     public void commit() {
         try {
             // Збереження нових сутностей
@@ -164,18 +162,14 @@ public class PersistenceContext {
         }
     }
 
-    /**
-     * Очищення списків змінених сутностей.
-     */
+    /** Очищення списків змінених сутностей. */
     private void clear() {
         newEntities.clear();
         updatedEntities.clear();
         deletedEntities.clear();
     }
 
-    /**
-     * Ініціалізація з'єднання з пулом.
-     */
+    /** Ініціалізація з'єднання з пулом. */
     private void initializeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -198,7 +192,8 @@ public class PersistenceContext {
     private <T, ID> Repository<T, ID> getRepository(Class<?> entityClass) {
         Repository<T, ID> repository = (Repository<T, ID>) repositories.get(entityClass);
         if (repository == null) {
-            throw new IllegalStateException("Репозиторій для " + entityClass.getSimpleName() + " не зареєстровано");
+            throw new IllegalStateException(
+                    "Репозиторій для " + entityClass.getSimpleName() + " не зареєстровано");
         }
         return repository;
     }

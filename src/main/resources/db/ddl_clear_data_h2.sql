@@ -7,3 +7,5 @@ DELETE
 FROM users;
 DELETE
 FROM transactions;
+DELETE
+FROM item_collection;

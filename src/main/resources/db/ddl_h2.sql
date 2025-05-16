@@ -7,10 +7,9 @@ CREATE TABLE IF NOT EXISTS users (
                          UNIQUE (username),
                      CONSTRAINT users_username_not_empty_check
                           CHECK (length(trim(username)) > 0),
-
     password_hash    VARCHAR(128)  NOT NULL,
     email            VARCHAR(376),
-    avatar_path      VARCHAR(2048)
+    role VARCHAR(15) NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
@@ -34,16 +33,31 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE TABLE IF NOT EXISTS collections (
     PRIMARY KEY(id),
     id               UUID,
-    user_id          UUID,
+    user_id          UUID NOT NULL,
                       CONSTRAINT collections_user_id_users_id_fkey
                      FOREIGN KEY (user_id)
                       REFERENCES users(id)
                        ON DELETE CASCADE,
-
     name             VARCHAR(128) NOT NULL,
                      CONSTRAINT collections_name_not_empty_check
                           CHECK (length(trim(name)) > 0),
     created_at       TIMESTAMP
+);
+
+-- 2NF
+CREATE TABLE IF NOT EXISTS item_collection (
+    PRIMARY KEY(collection_id, item_id),
+    collection_id   UUID NOT NULL,
+                     CONSTRAINT item_collection_collection_id_collections_id_fkey
+                    FOREIGN KEY (collection_id)
+                     REFERENCES collections(id)
+                      ON DELETE CASCADE,
+
+    item_id    UUID NOT NULL,
+                     CONSTRAINT item_collection_item_id_items_id_fkey
+                    FOREIGN KEY (item_id)
+                     REFERENCES items(id)
+                      ON DELETE CASCADE
 );
 
 -- 3NF

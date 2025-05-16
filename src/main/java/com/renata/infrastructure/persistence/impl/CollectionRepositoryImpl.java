@@ -8,18 +8,15 @@ import com.renata.infrastructure.persistence.GenericRepository;
 import com.renata.infrastructure.persistence.contract.CollectionRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
-import org.springframework.stereotype.Repository;
-
 import java.sql.*;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Repository;
 
-/**
- * Реалізація репозиторію для специфічних операцій з колекціями.
- */
+/** Реалізація репозиторію для специфічних операцій з колекціями. */
 @Repository
-public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID> implements
-    CollectionRepository {
+public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID>
+        implements CollectionRepository {
 
     /**
      * Конструктор репозиторію.
@@ -49,8 +46,11 @@ public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID
      */
     @Override
     public List<Item> findItemsByCollectionId(UUID collectionId) {
-        String baseSql = "SELECT a.* FROM items a JOIN item_collection ac ON a.id = ac.item_id WHERE ac.collection_id = ?";
-        return executeQuery(baseSql, stmt -> stmt.setObject(1, collectionId), this::mapResultSetToItem);
+        String baseSql =
+                "SELECT a.* FROM items a JOIN item_collection ac ON a.id = ac.item_id WHERE"
+                        + " ac.collection_id = ?";
+        return executeQuery(
+                baseSql, stmt -> stmt.setObject(1, collectionId), this::mapResultSetToItem);
     }
 
     /**
@@ -61,26 +61,30 @@ public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID
      */
     @Override
     public List<Collection> findByItemId(UUID itemId) {
-        String baseSql = "SELECT c.* FROM collections c JOIN item_collection ac ON c.id = ac.collection_id WHERE ac.item_id = ?";
-        return executeQuery(baseSql, stmt -> stmt.setObject(1, itemId), this::mapResultSetToCollection);
+        String baseSql =
+                "SELECT c.* FROM collections c JOIN item_collection ac ON c.id = ac.collection_id"
+                        + " WHERE ac.item_id = ?";
+        return executeQuery(
+                baseSql, stmt -> stmt.setObject(1, itemId), this::mapResultSetToCollection);
     }
 
     /**
      * Прикріплення антикваріату до колекції.
      *
      * @param collectionId ідентифікатор колекції
-     * @param itemId  ідентифікатор антикваріату
+     * @param itemId ідентифікатор антикваріату
      */
     @Override
     public void attachItemToCollection(UUID collectionId, UUID itemId) {
         String sql = "INSERT INTO item_collection (collection_id, item_id) VALUES (?, ?)";
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setObject(1, collectionId);
             statement.setObject(2, itemId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseAccessException("Помилка прикріплення антикваріату до колекції: " + sql, e);
+            throw new DatabaseAccessException(
+                    "Помилка прикріплення антикваріату до колекції: " + sql, e);
         }
     }
 
@@ -88,18 +92,19 @@ public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID
      * Від'єднання антикваріату від колекції.
      *
      * @param collectionId ідентифікатор колекції
-     * @param itemId  ідентифікатор антикваріату
+     * @param itemId ідентифікатор антикваріату
      */
     @Override
     public void detachItemFromCollection(UUID collectionId, UUID itemId) {
         String sql = "DELETE FROM item_collection WHERE collection_id = ? AND item_id = ?";
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setObject(1, collectionId);
             statement.setObject(2, itemId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseAccessException("Помилка від'єднання антикваріату від колекції: " + sql, e);
+            throw new DatabaseAccessException(
+                    "Помилка від'єднання антикваріату від колекції: " + sql, e);
         }
     }
 
@@ -111,10 +116,11 @@ public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID
      */
     @Override
     public long countItemsByCollectionId(UUID collectionId) {
-        Filter filter = (whereClause, params) -> {
-            whereClause.add("collection_id = ?");
-            params.add(collectionId);
-        };
+        Filter filter =
+                (whereClause, params) -> {
+                    whereClause.add("collection_id = ?");
+                    params.add(collectionId);
+                };
         return count(filter, "item_collection");
     }
 
@@ -138,7 +144,7 @@ public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID
     public void clearCollection(UUID collectionId) {
         String sql = "DELETE FROM item_collection WHERE collection_id = ?";
         try (Connection connection = connectionPool.getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setObject(1, collectionId);
             statement.executeUpdate();
         } catch (SQLException e) {

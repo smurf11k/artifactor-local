@@ -1,5 +1,8 @@
 package com.renata.domain.enums;
 
 public enum ItemCondition {
-    EXCELLENT, GOOD, FAIR, POOR
+    EXCELLENT,
+    GOOD,
+    FAIR,
+    POOR
 }

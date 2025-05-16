@@ -1,33 +1,37 @@
 package com.renata.domain.entities;
 
 import com.renata.domain.enums.TransactionType;
-import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.*;
 
-/**
- * Entity representing an antique transaction (purchase/sale).
- */
+/** Сутність, що представляє транзакцію здійснену з антикваріатом. */
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Transaction implements Comparable<Transaction> {
 
-    @EqualsAndHashCode.Include
-    private UUID id;
-    private TransactionType type;
+    public Transaction(
+            UUID id, UUID userId, UUID itemId, TransactionType type, LocalDateTime timestamp) {
+        System.out.println("Creating Transaction with arguments:");
+        System.out.println("1. id: " + id);
+        System.out.println("2. userId: " + userId);
+        System.out.println("3. itemId: " + itemId);
+        System.out.println("4. type: " + type);
+        System.out.println("5. timestamp: " + timestamp);
+    }
+
+    @EqualsAndHashCode.Include private UUID id;
     private UUID userId;
     private UUID itemId;
+    private TransactionType type;
     private LocalDateTime timestamp;
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Transaction that = (Transaction) o;
         return Objects.equals(id, that.id);
     }
@@ -39,19 +43,14 @@ public class Transaction implements Comparable<Transaction> {
 
     @Override
     public int compareTo(Transaction other) {
-        // Primary sort: timestamp (newest first)
         int timeComparison = other.timestamp.compareTo(this.timestamp);
         if (timeComparison != 0) {
             return timeComparison;
         }
-
-        // Secondary sort: transaction type
         return this.type.compareTo(other.type);
     }
 
-    /**
-     * Builder pattern implementation for fluent creation
-     */
+    /** Builder для точнішого створення записів транзакцій */
     public static TransactionBuilder builder() {
         return new TransactionBuilder();
     }
@@ -59,18 +58,13 @@ public class Transaction implements Comparable<Transaction> {
     @NoArgsConstructor
     public static class TransactionBuilder {
         private UUID id;
-        private TransactionType type;
         private UUID userId;
         private UUID itemId;
+        private TransactionType type;
         private LocalDateTime timestamp = LocalDateTime.now();
 
         public TransactionBuilder id(UUID id) {
             this.id = id;
-            return this;
-        }
-
-        public TransactionBuilder type(TransactionType type) {
-            this.type = type;
             return this;
         }
 
@@ -84,13 +78,18 @@ public class Transaction implements Comparable<Transaction> {
             return this;
         }
 
+        public TransactionBuilder type(TransactionType type) {
+            this.type = type;
+            return this;
+        }
+
         public TransactionBuilder timestamp(LocalDateTime timestamp) {
             this.timestamp = timestamp;
             return this;
         }
 
         public Transaction build() {
-            return new Transaction(id, type, userId, itemId, timestamp);
+            return new Transaction(id, userId, itemId, type, timestamp);
         }
     }
 }

@@ -1,8 +1,6 @@
 package com.renata.infrastructure.file.exception;
 
-/**
- * Виняток для обробки помилок під час роботи зі зберіганням файлів.
- */
+/** Виняток для обробки помилок під час роботи зі зберіганням файлів. */
 public class FileStorageException extends RuntimeException {
 
     public FileStorageException(String message) {

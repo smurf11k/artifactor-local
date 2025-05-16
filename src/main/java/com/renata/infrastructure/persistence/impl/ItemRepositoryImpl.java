@@ -7,15 +7,12 @@ import com.renata.infrastructure.persistence.GenericRepository;
 import com.renata.infrastructure.persistence.contract.ItemRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
-import org.springframework.stereotype.Repository;
-
 import java.sql.*;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Repository;
 
-/**
- * Реалізація репозиторію для специфічних операцій з антикваріатом.
- */
+/** Реалізація репозиторію для специфічних операцій з антикваріатом. */
 @Repository
 public class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements ItemRepository {
 
@@ -80,12 +77,15 @@ public class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements
      * @return список антикваріату
      */
     @Override
-    public List<Item> findByYearRange(Integer startYear, Integer endYear) {
-        String sql = "SELECT * FROM items WHERE year BETWEEN ? AND ?";
-        return executeQuery(sql, stmt -> {
-            stmt.setInt(1, startYear);
-            stmt.setInt(2, endYear);
-        }, this::mapResultSetToItem);
+    public List<Item> findByProductionYearRange(Integer startYear, Integer endYear) {
+        String sql = "SELECT * FROM items WHERE production_year BETWEEN ? AND ?";
+        return executeQuery(
+                sql,
+                stmt -> {
+                    stmt.setInt(1, startYear);
+                    stmt.setInt(2, endYear);
+                },
+                this::mapResultSetToItem);
     }
 
     /**

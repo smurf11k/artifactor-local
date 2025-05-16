@@ -1,8 +1,6 @@
 package com.renata.infrastructure.persistence.exception;
 
-/**
- * Виняток, що виникає при помилках зіставлення сутності з даними бази.
- */
+/** Виняток, що виникає при помилках зіставлення сутності з даними бази. */
 public class EntityMappingException extends RuntimeException {
 
     public EntityMappingException(String message) {

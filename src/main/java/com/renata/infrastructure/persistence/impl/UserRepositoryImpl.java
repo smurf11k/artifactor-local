@@ -6,16 +6,13 @@ import com.renata.infrastructure.persistence.GenericRepository;
 import com.renata.infrastructure.persistence.contract.UserRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
-import org.springframework.stereotype.Repository;
-
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Repository;
 
-/**
- * Реалізація репозиторію для специфічних операцій з користувачами.
- */
+/** Реалізація репозиторію для специфічних операцій з користувачами. */
 @Repository
 public class UserRepositoryImpl extends GenericRepository<User, UUID> implements UserRepository {
 
@@ -58,8 +55,9 @@ public class UserRepositoryImpl extends GenericRepository<User, UUID> implements
      */
     @Override
     public List<Collection> findCollectionsByUserId(UUID userId) {
-        String baseSql = "SELECT * FROM collections WHERE user_id = ?";
-        return executeQuery(baseSql, stmt -> stmt.setObject(1, userId), this::mapResultSetToCollection);
+        String baseSql = "SELECT * FROM collections WHERE user_id = ? ORDER BY created_at";
+        return executeQuery(
+                baseSql, stmt -> stmt.setObject(1, userId), this::mapResultSetToCollection);
     }
 
     /**
@@ -71,12 +69,14 @@ public class UserRepositoryImpl extends GenericRepository<User, UUID> implements
     @Override
     public List<User> findByPartialUsername(String partialUsername) {
         return findAll(
-            (whereClause, params) -> {
-                whereClause.add("username LIKE ?"); //ILIKE ????
-                params.add("%" + partialUsername + "%");
-            },
-            null, true, 0, Integer.MAX_VALUE
-        );
+                (whereClause, params) -> {
+                    whereClause.add("username ILIKE ?");
+                    params.add("%" + partialUsername + "%");
+                },
+                null,
+                true,
+                0,
+                Integer.MAX_VALUE);
     }
 
     /**
@@ -87,10 +87,11 @@ public class UserRepositoryImpl extends GenericRepository<User, UUID> implements
      */
     @Override
     public long countCollectionsByUserId(UUID userId) {
-        Filter filter = (whereClause, params) -> {
-            whereClause.add("user_id = ?");
-            params.add(userId);
-        };
+        Filter filter =
+                (whereClause, params) -> {
+                    whereClause.add("user_id = ?");
+                    params.add(userId);
+                };
         return count(filter, "collections");
     }
 
@@ -102,10 +103,11 @@ public class UserRepositoryImpl extends GenericRepository<User, UUID> implements
      */
     @Override
     public boolean existsByUsername(String username) {
-        Filter filter = (whereClause, params) -> {
-            whereClause.add("username = ?");
-            params.add(username);
-        };
+        Filter filter =
+                (whereClause, params) -> {
+                    whereClause.add("username = ?");
+                    params.add(username);
+                };
         return count(filter) > 0;
     }
 
@@ -117,10 +119,11 @@ public class UserRepositoryImpl extends GenericRepository<User, UUID> implements
      */
     @Override
     public boolean existsByEmail(String email) {
-        Filter filter = (whereClause, params) -> {
-            whereClause.add("email = ?");
-            params.add(email);
-        };
+        Filter filter =
+                (whereClause, params) -> {
+                    whereClause.add("email = ?");
+                    params.add(email);
+                };
         return count(filter) > 0;
     }
 
@@ -143,6 +146,4 @@ public class UserRepositoryImpl extends GenericRepository<User, UUID> implements
             throw new DatabaseAccessException("Помилка зіставлення ResultSet із колекцією", e);
         }
     }
-
-
 }
