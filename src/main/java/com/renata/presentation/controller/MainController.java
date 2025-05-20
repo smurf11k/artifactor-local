@@ -13,6 +13,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import org.springframework.stereotype.Component;
 
+/** Головний контролер додатку. */
 @Component
 public class MainController {
 
@@ -32,7 +33,8 @@ public class MainController {
             switch (selectedButton.getText()) {
                 case "Авторизація" -> switchPage("/com/renata/view/user/SignIn.fxml");
                 case "Реєстрація" -> switchPage("/com/renata/view/user/SignUp.fxml");
-                case "Список" -> switchPage("/com/renata/view/user/List.fxml");
+                case "Додати антикваріат" -> switchPage("/com/renata/view/item/AddItem.fxml");
+                case "Переглянути антикваріат" -> switchPage("/com/renata/view/item/ItemList.fxml");
                 default ->
                         System.err.println(
                                 String.format("Unknown selection: %s", selectedButton.getText()));

@@ -23,7 +23,13 @@
         </graphic>
       </ToggleButton>
 
-      <ToggleButton text="Список користувачів" toggleGroup="$toggleGroup"
+      <ToggleButton text="Додати антикваріат" toggleGroup="$toggleGroup"
+        onAction="#handleMenuSelection">
+        <graphic>
+          <FontIcon iconLiteral="bx-plus" />
+        </graphic>
+      </ToggleButton>
+      <ToggleButton text="Переглянути антикваріат" toggleGroup="$toggleGroup"
         onAction="#handleMenuSelection">
         <graphic>
           <FontIcon iconLiteral="bx-list-ul" />
@@ -32,7 +38,6 @@
     </VBox>
   </left>
   <center>
-    <!-- Вузол, який буде оновлюватися -->
     <fx:include source="user/SignIn.fxml" />
   </center>
 </BorderPane>

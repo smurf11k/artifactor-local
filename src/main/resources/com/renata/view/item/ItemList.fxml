@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.item.ItemListController" spacing="10" alignment="CENTER">
+  <TableView fx:id="itemTable">
+    <columns>
+      <TableColumn fx:id="nameColumn" text="Name" prefWidth="150"/>
+      <TableColumn fx:id="typeColumn" text="Type" prefWidth="100"/>
+      <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="200"/>
+      <TableColumn fx:id="productionYearColumn" text="Production Year" prefWidth="100"/>
+      <TableColumn fx:id="countryColumn" text="Country" prefWidth="100"/>
+      <TableColumn fx:id="conditionColumn" text="Condition" prefWidth="100"/>
+      <TableColumn fx:id="imageColumn" text="Image" prefWidth="100"/>
+    </columns>
+  </TableView>
+  <HBox spacing="10" alignment="CENTER">
+    <Button fx:id="refreshButton" text="Refresh" onAction="#onRefresh"/>
+    <Button fx:id="backButton" text="Back" onAction="#onBack"/>
+  </HBox>
+</VBox>

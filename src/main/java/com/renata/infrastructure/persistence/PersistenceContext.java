@@ -29,7 +29,6 @@ public class PersistenceContext {
     private final ConnectionPool connectionPool;
     private final ItemRepository itemRepository;
     private final TransactionRepository transactionRepository;
-    // private final AuthorRepository authorRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
     private Connection connection;
@@ -47,13 +46,11 @@ public class PersistenceContext {
             ConnectionPool connectionPool,
             ItemRepository itemRepository,
             TransactionRepository transactionRepository,
-            // AuthorRepository authorRepository,
             CollectionRepository collectionRepository,
             UserRepository userRepository) {
         this.connectionPool = connectionPool;
         this.itemRepository = itemRepository;
         this.transactionRepository = transactionRepository;
-        // this.authorRepository = authorRepository;
         this.collectionRepository = collectionRepository;
         this.userRepository = userRepository;
 
@@ -67,7 +64,6 @@ public class PersistenceContext {
     @PostConstruct
     private void init() {
         this.registerRepository(Item.class, itemRepository);
-        // this.registerRepository(Author.class, authorRepository);
         this.registerRepository(Transaction.class, transactionRepository);
         this.registerRepository(Collection.class, collectionRepository);
         this.registerRepository(User.class, userRepository);
@@ -123,27 +119,23 @@ public class PersistenceContext {
     /** Застосування всіх зареєстрованих змін у транзакції. */
     public void commit() {
         try {
-            // Збереження нових сутностей
             for (Object entity : newEntities) {
                 Repository<Object, Object> repository = getRepository(entity.getClass());
                 System.out.println("Saving entity: " + entity); // Логування
                 repository.save(entity);
             }
 
-            // Оновлення сутностей
             for (Map.Entry<Object, Object> entry : updatedEntities.entrySet()) {
                 Repository<Object, Object> repository = getRepository(entry.getValue().getClass());
                 repository.update(entry.getKey(), entry.getValue());
             }
 
-            // Видалення сутностей
             for (Object entity : deletedEntities) {
                 Repository<Object, Object> repository = getRepository(entity.getClass());
                 Object id = repository.extractId(entity);
                 repository.delete(id);
             }
 
-            // Коміт транзакції
             connection.commit();
         } catch (SQLException e) {
             try {
@@ -155,7 +147,7 @@ public class PersistenceContext {
         } finally {
             clear();
             try {
-                connection.close(); // Закриваємо з'єднання для повернення в пул
+                connection.close();
             } catch (SQLException e) {
                 throw new DatabaseAccessException("Помилка закриття з'єднання", e);
             }
@@ -173,10 +165,10 @@ public class PersistenceContext {
     private void initializeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
-                connection.close(); // Закриваємо старе з'єднання
+                connection.close();
             }
             this.connection = connectionPool.getConnection();
-            this.connection.setAutoCommit(false); // Вимикаємо автокоміт для транзакцій
+            this.connection.setAutoCommit(false);
         } catch (SQLException e) {
             throw new DatabaseAccessException("Помилка ініціалізації з'єднання", e);
         }

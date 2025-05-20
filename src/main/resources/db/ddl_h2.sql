@@ -21,9 +21,7 @@ CREATE TABLE IF NOT EXISTS items (
     name             VARCHAR(255) NOT NULL,
     type             VARCHAR(20) NOT NULL CHECK (type IN ('COIN', 'ANTIQUE')),
     description      TEXT,
-    production_year  INTEGER      NOT NULL,
-                     CONSTRAINT items_production_year_check
-                          CHECK (production_year > 0 AND production_year <= EXTRACT(YEAR FROM CURRENT_DATE) + 1),
+    production_year  VARCHAR(50) NOT NULL,
     country          VARCHAR(255),
     condition        VARCHAR(20) NOT NULL CHECK (condition IN ('EXCELLENT', 'GOOD', 'FAIR', 'POOR')),
     image_path       VARCHAR(2048)

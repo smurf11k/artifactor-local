@@ -165,7 +165,7 @@ public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID
             item.setName(rs.getString("name"));
             item.setType(AntiqueType.valueOf(rs.getString("type")));
             item.setDescription(rs.getString("description"));
-            item.setProductionYear(rs.getInt("year"));
+            item.setProductionYear(rs.getString("year"));
             item.setCountry(rs.getString("country"));
             item.setCondition(ItemCondition.valueOf(rs.getString("condition")));
             item.setImagePath(rs.getString("image_path"));

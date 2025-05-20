@@ -9,6 +9,10 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import org.springframework.stereotype.Component;
 
+/**
+ * Контролер форми входу в систему.
+ * Обробляє автентифікацію через AuthService та відображає повідомлення про помилки.
+ */
 @Component
 public class SignInController {
 
@@ -35,6 +39,7 @@ public class SignInController {
 
             if (authenticated) {
                 showAlert(Alert.AlertType.INFORMATION, "Успіх", "Вхід виконано успішно!");
+                System.out.println("Login successful for: " + username);
             } else {
                 showAlert(Alert.AlertType.ERROR, "Помилка", "Невірний логін або пароль.");
             }

@@ -1,5 +1,7 @@
 package com.renata.application.contract;
 
+import com.renata.application.dto.ItemStoreDto;
+import com.renata.application.dto.ItemUpdateDto;
 import com.renata.domain.entities.Item;
 import com.renata.infrastructure.file.exception.FileStorageException;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
@@ -13,27 +15,27 @@ public interface ItemService {
     /**
      * Створює новий антикваріат та, за потреби, завантажує картинку.
      *
-     * @param item антикваріат для створення
+     * @param itemStoreDto DTO з даними для створення антикваріату
      * @param image потік даних картинки, може бути null
      * @param imageName ім'я файлу картинки, може бути null
      * @return створений антикваріат
      * @throws DatabaseAccessException якщо виникає помилка при роботі з базою даних
      * @throws FileStorageException якщо виникає помилка при роботі з файлами
      */
-    Item create(Item item, InputStream image, String imageName);
+    Item create(ItemStoreDto itemStoreDto, InputStream image, String imageName);
 
     /**
      * Оновлює існуючий антикваріат та, за потреби, оновлює картинку.
      *
      * @param id ідентифікатор антикваріату для оновлення
-     * @param item оновлені дані антикваріату
+     * @param itemUpdateDto DTO з даними для оновлення антикваріату
      * @param image потік даних нової картинки, може бути null
      * @param imageName ім'я файлу нової картинки, може бути null
      * @return оновлений антикваріат
      * @throws DatabaseAccessException якщо виникає помилка при роботі з базою даних
      * @throws FileStorageException якщо виникає помилка при роботі з файлами
      */
-    Item update(UUID id, Item item, InputStream image, String imageName);
+    Item update(UUID id, ItemUpdateDto itemUpdateDto, InputStream image, String imageName);
 
     /**
      * Видаляє антикваріат та всі пов'язані файли.

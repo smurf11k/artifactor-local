@@ -8,11 +8,11 @@ INSERT INTO users (id, username, password_hash, email, role) VALUES
 
 -- ITEMS
 INSERT INTO items (id, name, type, description, production_year, country, condition, image_path) VALUES
-('27430c82-74fc-44a2-a354-c2692c2e7fa3', 'Napoleon III Coin', 'COIN', 'French 10 Francs gold coin minted in 1862.', 1862, 'France', 'GOOD', '/images/dog.png'),
-('98138a54-0a3d-42b0-bc80-4b893e1a36ef', 'Ming Dynasty Vase', 'ANTIQUE', 'Porcelain vase from early Ming dynasty.', 1420, 'China', 'EXCELLENT', '/images/dog.png'),
-('8b6c593f-3e68-44b0-8c3b-7a8e3d15c874', 'Ancient Greek Tetradrachm', 'COIN', 'Silver coin featuring Alexander the Great.', 320, 'Greece', 'FAIR', '/images/dog.png'),
-('1e6a980f-cc0e-4ba5-bc53-37b1ffb1425b', 'Art Nouveau Clock', 'ANTIQUE', 'Handcrafted brass clock from 1905.', 1905, 'Belgium', 'GOOD', '/images/dog.png'),
-('f340bf09-e054-4f6f-bb0a-77022c15d88a', 'Byzantine Cross Pendant', 'ANTIQUE', 'Bronze cross from Byzantine Empire.', 780, 'Turkey', 'POOR', '/images/dog.png');
+('27430c82-74fc-44a2-a354-c2692c2e7fa3', 'Napoleon III Coin', 'COIN', 'French 10 Francs gold coin minted in 1862.', '1862', 'France', 'GOOD', '/images/dog.png'),
+('98138a54-0a3d-42b0-bc80-4b893e1a36ef', 'Ming Dynasty Vase', 'ANTIQUE', 'Porcelain vase from early Ming dynasty.', '1420', 'China', 'EXCELLENT', '/images/dog.png'),
+('8b6c593f-3e68-44b0-8c3b-7a8e3d15c874', 'Ancient Greek Tetradrachm', 'COIN', 'Silver coin featuring Alexander the Great.', '320', 'Greece', 'FAIR', '/images/dog.png'),
+('1e6a980f-cc0e-4ba5-bc53-37b1ffb1425b', 'Art Nouveau Clock', 'ANTIQUE', 'Handcrafted brass clock from 1905.', '1905', 'Belgium', 'GOOD', '/images/dog.png'),
+('f340bf09-e054-4f6f-bb0a-77022c15d88a', 'Byzantine Cross Pendant', 'ANTIQUE', 'Bronze cross from Byzantine Empire.', 'unknown', 'Turkey', 'POOR', '/images/dog.png');
 
 -- COLLECTIONS
 INSERT INTO collections (id, user_id, name, created_at) VALUES

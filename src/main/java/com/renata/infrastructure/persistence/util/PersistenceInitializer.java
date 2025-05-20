@@ -38,7 +38,6 @@ public class PersistenceInitializer {
                 Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
 
-            // Створюємо таблиці та заповнюємо їх даними
             statement.execute(getSQL(DDL_SCRIPT_PATH));
             if (isRunDml) statement.execute(getSQL(DML_SCRIPT_PATH));
             connection.commit();

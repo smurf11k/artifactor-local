@@ -41,29 +41,4 @@ public interface ItemRepository extends Repository<Item, UUID> {
      * @return список антикваріату
      */
     List<Item> findByCondition(ItemCondition condition);
-
-    /**
-     * Пошук антикваріату за діапазоном років.
-     *
-     * @param startYear початковий рік
-     * @param endYear кінцевий рік
-     * @return список антикваріату
-     */
-    List<Item> findByProductionYearRange(Integer startYear, Integer endYear);
-
-    /**
-     * Пошук антикваріату старішого за заданий рік.
-     *
-     * @param year заданий рік
-     * @return список антикваріату
-     */
-    List<Item> findOlderThan(Integer year);
-
-    /**
-     * Пошук антикваріату новішого за заданий рік.
-     *
-     * @param year заданий рік
-     * @return список антикваріату
-     */
-    List<Item> findNewerThan(Integer year);
 }

@@ -1,5 +1,7 @@
 package com.renata.application.contract;
 
+import com.renata.application.dto.CollectionStoreDto;
+import com.renata.application.dto.CollectionUpdateDto;
 import com.renata.domain.entities.Collection;
 import com.renata.domain.entities.Item;
 import java.util.List;
@@ -11,19 +13,19 @@ public interface CollectionService {
     /**
      * Створює нову колекцію.
      *
-     * @param collection об'єкт колекції для створення
+     * @param collectionStoreDto DTO з даними для створення колекції
      * @return створена колекція
      */
-    Collection create(Collection collection);
+    Collection create(CollectionStoreDto collectionStoreDto);
 
     /**
      * Оновлює існуючу колекцію.
      *
      * @param id ідентифікатор колекції для оновлення
-     * @param collection оновлені дані колекції
+     * @param collectionUpdateDto DTO з даними для оновлення колекції
      * @return оновлена колекція
      */
-    Collection update(UUID id, Collection collection);
+    Collection update(UUID id, CollectionUpdateDto collectionUpdateDto);
 
     /**
      * Видаляє колекцію за ідентифікатором.

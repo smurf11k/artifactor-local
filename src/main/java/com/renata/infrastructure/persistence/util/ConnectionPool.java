@@ -50,7 +50,7 @@ public class ConnectionPool {
         return (Connection)
                 Proxy.newProxyInstance(
                         ConnectionPool.class.getClassLoader(),
-                        new Class[] {Connection.class},
+                        new Class<?>[] {Connection.class},
                         (proxy, method, args) -> {
                             if ("close".equals(method.getName())) {
                                 availableConnections.offer((Connection) proxy);

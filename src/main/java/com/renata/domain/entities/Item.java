@@ -13,11 +13,11 @@ import lombok.*;
 @NoArgsConstructor
 public class Item implements Comparable<Item> {
 
-    @EqualsAndHashCode.Include private UUID id;
+    private UUID id;
     private String name;
     private AntiqueType type;
     private String description;
-    private Integer productionYear;
+    private String productionYear;
     private String country;
     private ItemCondition condition;
     private String imagePath;
@@ -37,10 +37,6 @@ public class Item implements Comparable<Item> {
 
     @Override
     public int compareTo(Item other) {
-        int titleComparison = this.name.compareToIgnoreCase(other.name);
-        if (titleComparison != 0) {
-            return titleComparison;
-        }
-        return Integer.compare(other.productionYear, this.productionYear);
+        return this.name.compareToIgnoreCase(other.name);
     }
 }

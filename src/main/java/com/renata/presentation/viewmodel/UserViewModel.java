@@ -9,6 +9,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+/** ViewModel для роботи з користувачами. */
 @Getter
 @Setter
 public class UserViewModel {

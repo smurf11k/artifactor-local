@@ -1,9 +1,9 @@
-package com.renata.application.contract;
+package com.renata.infrastructure.api;
 
 import java.util.function.Supplier;
 
 /** Сервіс для верифікації електронної пошти через одноразові коди. */
-public interface EmailService {
+public interface EmailSender {
 
     /**
      * Ініціює процес верифікації email, генеруючи та надсилаючи код підтвердження.

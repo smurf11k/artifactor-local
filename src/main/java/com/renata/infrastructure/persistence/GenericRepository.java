@@ -545,7 +545,8 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
         }
 
         if (targetType.isEnum() && value instanceof String) {
-            return Enum.valueOf((Class<Enum>) targetType, ((String) value).toUpperCase());
+            Class<? extends Enum> enumType = (Class<? extends Enum>) targetType;
+            return Enum.valueOf(enumType, ((String) value).toUpperCase());
         }
 
         return switch (targetType.getName()) {
@@ -558,7 +559,6 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
                             : Integer.parseInt(value.toString());
             case "java.time.LocalDateTime" ->
                     value instanceof Timestamp ? ((Timestamp) value).toLocalDateTime() : null;
-
             default -> value;
         };
     }

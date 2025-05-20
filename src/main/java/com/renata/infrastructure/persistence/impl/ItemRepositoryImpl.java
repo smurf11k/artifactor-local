@@ -70,49 +70,6 @@ public class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements
     }
 
     /**
-     * Пошук антикваріату за діапазоном років.
-     *
-     * @param startYear початковий рік
-     * @param endYear кінцевий рік
-     * @return список антикваріату
-     */
-    @Override
-    public List<Item> findByProductionYearRange(Integer startYear, Integer endYear) {
-        String sql = "SELECT * FROM items WHERE production_year BETWEEN ? AND ?";
-        return executeQuery(
-                sql,
-                stmt -> {
-                    stmt.setInt(1, startYear);
-                    stmt.setInt(2, endYear);
-                },
-                this::mapResultSetToItem);
-    }
-
-    /**
-     * Пошук антикваріату старішого за заданий рік.
-     *
-     * @param productionYear заданий рік
-     * @return список антикваріату
-     */
-    @Override
-    public List<Item> findOlderThan(Integer productionYear) {
-        String sql = "SELECT * FROM items WHERE production_year < ?";
-        return executeQuery(sql, stmt -> stmt.setInt(1, productionYear), this::mapResultSetToItem);
-    }
-
-    /**
-     * Пошук антикваріату новішого за заданий рік.
-     *
-     * @param productionYear заданий рік
-     * @return список антикваріату
-     */
-    @Override
-    public List<Item> findNewerThan(Integer productionYear) {
-        String sql = "SELECT * FROM items WHERE production_year > ?";
-        return executeQuery(sql, stmt -> stmt.setInt(1, productionYear), this::mapResultSetToItem);
-    }
-
-    /**
      * Зіставлення ResultSet в антикваріат.
      *
      * @param rs результат запиту
@@ -125,13 +82,13 @@ public class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements
             item.setName(rs.getString("name"));
             item.setType(AntiqueType.valueOf(rs.getString("type")));
             item.setDescription(rs.getString("description"));
-            item.setProductionYear(rs.getInt("production_year"));
+            item.setProductionYear(rs.getString("production_year"));
             item.setCountry(rs.getString("country"));
             item.setCondition(ItemCondition.valueOf(rs.getString("condition")));
             item.setImagePath(rs.getString("image_path"));
             return item;
         } catch (Exception e) {
-            throw new DatabaseAccessException("Error mapping ResultSet to Item", e);
+            throw new DatabaseAccessException("Помилка зіставлення ResultSet із антикваріату", e);
         }
     }
 }

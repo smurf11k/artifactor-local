@@ -23,7 +23,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean login(String username, String password) throws AuthException {
         if (currentUser != null) {
-            throw new AuthException("Already logged in as: " + currentUser.getUsername());
+            throw new AuthException("Ви вже авторизовані як: " + currentUser.getUsername());
         }
 
         User user =
@@ -36,12 +36,13 @@ public class AuthServiceImpl implements AuthService {
         }
 
         currentUser = user;
+        System.out.println("User logged in: " + username + ", ID: " + user.getId());
         return true;
     }
 
     @Override
     public void logout() throws AuthException {
-        if (currentUser == null) {
+        if (!isAuthenticated()) {
             throw new AuthException("No active session");
         }
         currentUser = null;
@@ -49,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User getCurrentUser() throws AuthException {
-        if (currentUser == null) {
+        if (!isAuthenticated()) {
             throw new AuthException("Not authenticated");
         }
         return currentUser;

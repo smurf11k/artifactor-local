@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+
+<GridPane xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.renata.presentation.controller.item.ItemController"
+  alignment="CENTER" hgap="10" vgap="10" style="-fx-padding: 20;">
+
+  <Label text="ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+  <Label fx:id="idLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+  <Label text="Name:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+  <TextField fx:id="nameField" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="300"/>
+
+  <Label text="Description:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+  <TextArea fx:id="descriptionArea" GridPane.rowIndex="2" GridPane.columnIndex="1" prefHeight="100" prefWidth="300"/>
+
+  <Label text="Type:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+  <ComboBox fx:id="typeComboBox" GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="300"/>
+
+  <Label text="Production Year:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+  <TextField fx:id="productionYearField" GridPane.rowIndex="4" GridPane.columnIndex="1" prefWidth="300"/>
+
+  <Label text="Country:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+  <TextField fx:id="countryField" GridPane.rowIndex="5" GridPane.columnIndex="1" prefWidth="300"/>
+
+  <Label text="Condition:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+  <ComboBox fx:id="conditionComboBox" GridPane.rowIndex="6" GridPane.columnIndex="1" prefWidth="300"/>
+
+  <Label text="Image:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+  <HBox GridPane.rowIndex="7" GridPane.columnIndex="1" spacing="10">
+    <TextField fx:id="imagePathField" prefWidth="220" editable="false"/>
+    <Button text="Choose Image" onAction="#onChooseImage"/>
+  </HBox>
+
+  <HBox GridPane.rowIndex="8" GridPane.columnIndex="1" spacing="10" alignment="CENTER_RIGHT">
+    <Button text="Save" onAction="#onSave"/>
+    <Button text="Cancel" onAction="#onCancel"/>
+  </HBox>
+
+</GridPane>

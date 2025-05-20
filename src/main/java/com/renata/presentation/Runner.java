@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 
+/** Головний клас JavaFX додатку. */
 @ComponentScan("com.renata")
 public class Runner extends Application {
 
@@ -23,7 +24,6 @@ public class Runner extends Application {
     public void start(Stage stage) throws Exception {
         var fxmlLoader = new SpringFXMLLoader(springContext);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
-        // var mainFxmlResource = Runner.class.getResource(Path.of("view", "Main.fxml").toString());
         var mainFxmlResource = Runner.class.getResource("/com/renata/view/Main.fxml");
         Parent parent = (Parent) fxmlLoader.load(mainFxmlResource);
         Scene scene = new Scene(parent, 900, 600);
@@ -38,14 +38,14 @@ public class Runner extends Application {
         var databaseInitializer = springContext.getBean(PersistenceInitializer.class);
 
         // Підключення atlantaFX
-        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
         try {
             databaseInitializer.init();
             launch(args);
         } finally {
-            connectionManager.shutdown(); // close
+            connectionManager.shutdown();
         }
     }
 }

@@ -3,6 +3,7 @@ package com.renata.application.impl;
 import com.renata.application.contract.PasswordService;
 import com.renata.application.contract.UserService;
 import com.renata.application.dto.UserStoreDto;
+import com.renata.application.exception.SignUpException;
 import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.Collection;
 import com.renata.domain.entities.User;
@@ -77,6 +78,15 @@ public class UserServiceImpl implements UserService {
         var violations = validator.validate(userStoreDto);
         if (!violations.isEmpty()) {
             throw ValidationException.create("user creation", violations);
+        }
+
+        if (existsByUsername(userStoreDto.username())) {
+            throw new SignUpException(
+                    "Логін '" + userStoreDto.username() + "' вже використовується.");
+        }
+
+        if (existsByEmail(userStoreDto.email())) {
+            throw new SignUpException("Пошта '" + userStoreDto.email() + "' вже використовується.");
         }
 
         User user =
