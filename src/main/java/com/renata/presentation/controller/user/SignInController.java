@@ -10,8 +10,8 @@ import javafx.scene.control.TextField;
 import org.springframework.stereotype.Component;
 
 /**
- * Контролер форми входу в систему.
- * Обробляє автентифікацію через AuthService та відображає повідомлення про помилки.
+ * Контролер форми входу в систему. Обробляє автентифікацію через AuthService та відображає
+ * повідомлення про помилки.
  */
 @Component
 public class SignInController {

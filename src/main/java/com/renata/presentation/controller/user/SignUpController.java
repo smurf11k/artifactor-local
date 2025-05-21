@@ -21,8 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Контролер реєстрації нового користувача.
- * Керує: валідацією даних, верифікацією email, створенням акаунта через UserService.
+ * Контролер реєстрації нового користувача. Керує: валідацією даних, верифікацією email, створенням
+ * акаунта через UserService.
  */
 @Component
 public class SignUpController {

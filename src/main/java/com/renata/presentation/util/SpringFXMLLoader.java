@@ -5,7 +5,10 @@ import java.net.URL;
 import javafx.fxml.FXMLLoader;
 import org.springframework.context.ApplicationContext;
 
-/** Завантажує FXML-файли з інтеграцією Spring (автоматичне зв'язування контролерів через Spring context). */
+/**
+ * Завантажує FXML-файли з інтеграцією Spring (автоматичне зв'язування контролерів через Spring
+ * context).
+ */
 public class SpringFXMLLoader {
 
     private final ApplicationContext context;
