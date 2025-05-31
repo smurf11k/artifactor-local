@@ -1,5 +1,8 @@
 package com.renata.infrastructure.persistence;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.renata.domain.entities.Collection;
 import com.renata.domain.entities.Item;
 import com.renata.domain.entities.User;
@@ -12,19 +15,15 @@ import com.renata.infrastructure.persistence.contract.UserRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
 import com.renata.infrastructure.persistence.util.PersistenceInitializer;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringJUnitConfig(classes = {InfrastructureConfig.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -43,12 +42,12 @@ class CollectionRepositoryTest {
 
     @Autowired
     public CollectionRepositoryTest(
-        CollectionRepository collectionRepository,
-        ItemRepository itemRepository,
-        UserRepository userRepository,
-        PersistenceInitializer persistenceInitializer,
-        ConnectionPool connectionPool,
-        PersistenceContext persistenceContext) {
+            CollectionRepository collectionRepository,
+            ItemRepository itemRepository,
+            UserRepository userRepository,
+            PersistenceInitializer persistenceInitializer,
+            ConnectionPool connectionPool,
+            PersistenceContext persistenceContext) {
         this.collectionRepository = collectionRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
@@ -111,8 +110,10 @@ class CollectionRepositoryTest {
         User user = createAndSaveUser();
         Collection collection = createAndSaveCollection(user, TEST_COLLECTION_NAME);
 
-        Collection found = collectionRepository.findById(collection.getId())
-            .orElseThrow(() -> new AssertionError("Collection not found"));
+        Collection found =
+                collectionRepository
+                        .findById(collection.getId())
+                        .orElseThrow(() -> new AssertionError("Collection not found"));
         assertThat(found.getName()).isEqualTo(TEST_COLLECTION_NAME);
         assertThat(found.getUserId()).isEqualTo(user.getId());
     }
@@ -123,12 +124,14 @@ class CollectionRepositoryTest {
         Collection collection = createAndSaveCollection(user, TEST_COLLECTION_NAME);
 
         List<Collection> found = collectionRepository.findByUserId(user.getId());
-        assertThat(found).hasSize(1)
-            .first()
-            .satisfies(c -> {
-                assertThat(c.getName()).isEqualTo(TEST_COLLECTION_NAME);
-                assertThat(c.getUserId()).isEqualTo(user.getId());
-            });
+        assertThat(found)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        c -> {
+                            assertThat(c.getName()).isEqualTo(TEST_COLLECTION_NAME);
+                            assertThat(c.getUserId()).isEqualTo(user.getId());
+                        });
     }
 
     @Test
@@ -139,9 +142,10 @@ class CollectionRepositoryTest {
 
         collectionRepository.attachItemToCollection(collection.getId(), item.getId());
         List<Item> items = collectionRepository.findItemsByCollectionId(collection.getId());
-        assertThat(items).hasSize(1)
-            .first()
-            .satisfies(i -> assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME));
+        assertThat(items)
+                .hasSize(1)
+                .first()
+                .satisfies(i -> assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME));
 
         collectionRepository.detachItemFromCollection(collection.getId(), item.getId());
         assertThat(collectionRepository.findItemsByCollectionId(collection.getId())).isEmpty();
@@ -155,12 +159,14 @@ class CollectionRepositoryTest {
 
         collectionRepository.attachItemToCollection(collection.getId(), item.getId());
         List<Collection> collections = collectionRepository.findByItemId(item.getId());
-        assertThat(collections).hasSize(1)
-            .first()
-            .satisfies(c -> {
-                assertThat(c.getId()).isEqualTo(collection.getId());
-                assertThat(c.getName()).isEqualTo(TEST_COLLECTION_NAME);
-            });
+        assertThat(collections)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        c -> {
+                            assertThat(c.getId()).isEqualTo(collection.getId());
+                            assertThat(c.getName()).isEqualTo(TEST_COLLECTION_NAME);
+                        });
     }
 
     @Test
@@ -194,12 +200,14 @@ class CollectionRepositoryTest {
         Collection collection = createAndSaveCollection(user, TEST_COLLECTION_NAME);
 
         List<Collection> collections = collectionRepository.findByName(TEST_COLLECTION_NAME);
-        assertThat(collections).hasSize(1)
-            .first()
-            .satisfies(c -> {
-                assertThat(c.getName()).isEqualTo(TEST_COLLECTION_NAME);
-                assertThat(c.getUserId()).isEqualTo(user.getId());
-            });
+        assertThat(collections)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        c -> {
+                            assertThat(c.getName()).isEqualTo(TEST_COLLECTION_NAME);
+                            assertThat(c.getUserId()).isEqualTo(user.getId());
+                        });
     }
 
     @Test
@@ -208,7 +216,10 @@ class CollectionRepositoryTest {
         Collection collection = createAndSaveCollection(user, TEST_COLLECTION_NAME);
         UUID invalidItemId = UUID.randomUUID();
 
-        assertThrows(DatabaseAccessException.class, () ->
-            collectionRepository.attachItemToCollection(collection.getId(), invalidItemId));
+        assertThrows(
+                DatabaseAccessException.class,
+                () ->
+                        collectionRepository.attachItemToCollection(
+                                collection.getId(), invalidItemId));
     }
 }

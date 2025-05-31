@@ -1,24 +1,22 @@
 package com.renata.infrastructure.persistence;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.renata.domain.entities.Item;
 import com.renata.domain.enums.AntiqueType;
 import com.renata.domain.enums.ItemCondition;
 import com.renata.infrastructure.InfrastructureConfig;
 import com.renata.infrastructure.persistence.contract.ItemRepository;
-import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
 import com.renata.infrastructure.persistence.util.PersistenceInitializer;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = {InfrastructureConfig.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -38,9 +36,9 @@ class ItemRepositoryTest {
 
     @Autowired
     public ItemRepositoryTest(
-        ItemRepository itemRepository,
-        PersistenceInitializer persistenceInitializer,
-        ConnectionPool connectionPool) {
+            ItemRepository itemRepository,
+            PersistenceInitializer persistenceInitializer,
+            ConnectionPool connectionPool) {
         this.itemRepository = itemRepository;
         this.persistenceInitializer = persistenceInitializer;
         this.connectionPool = connectionPool;
@@ -78,8 +76,10 @@ class ItemRepositoryTest {
     void shouldSaveAndRetrieveItemById() {
         Item item = createAndSaveItem();
 
-        Item found = itemRepository.findById(item.getId())
-            .orElseThrow(() -> new AssertionError("Item not found"));
+        Item found =
+                itemRepository
+                        .findById(item.getId())
+                        .orElseThrow(() -> new AssertionError("Item not found"));
         assertThat(found.getName()).isEqualTo(TEST_ITEM_NAME);
         assertThat(found.getType()).isEqualTo(TEST_TYPE);
         assertThat(found.getCountry()).isEqualTo(TEST_COUNTRY);
@@ -92,12 +92,14 @@ class ItemRepositoryTest {
         Item item = createAndSaveItem();
 
         List<Item> items = itemRepository.findByName(TEST_ITEM_NAME);
-        assertThat(items).hasSize(1)
-            .first()
-            .satisfies(i -> {
-                assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                assertThat(i.getType()).isEqualTo(TEST_TYPE);
-            });
+        assertThat(items)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        i -> {
+                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
+                            assertThat(i.getType()).isEqualTo(TEST_TYPE);
+                        });
     }
 
     @Test
@@ -105,12 +107,14 @@ class ItemRepositoryTest {
         Item item = createAndSaveItem();
 
         List<Item> items = itemRepository.findByType(TEST_TYPE);
-        assertThat(items).hasSize(1)
-            .first()
-            .satisfies(i -> {
-                assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                assertThat(i.getType()).isEqualTo(TEST_TYPE);
-            });
+        assertThat(items)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        i -> {
+                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
+                            assertThat(i.getType()).isEqualTo(TEST_TYPE);
+                        });
     }
 
     @Test
@@ -118,12 +122,14 @@ class ItemRepositoryTest {
         Item item = createAndSaveItem();
 
         List<Item> items = itemRepository.findByCountry(TEST_COUNTRY);
-        assertThat(items).hasSize(1)
-            .first()
-            .satisfies(i -> {
-                assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                assertThat(i.getCountry()).isEqualTo(TEST_COUNTRY);
-            });
+        assertThat(items)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        i -> {
+                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
+                            assertThat(i.getCountry()).isEqualTo(TEST_COUNTRY);
+                        });
     }
 
     @Test
@@ -131,12 +137,14 @@ class ItemRepositoryTest {
         Item item = createAndSaveItem();
 
         List<Item> items = itemRepository.findByCondition(TEST_CONDITION);
-        assertThat(items).hasSize(1)
-            .first()
-            .satisfies(i -> {
-                assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                assertThat(i.getCondition()).isEqualTo(TEST_CONDITION);
-            });
+        assertThat(items)
+                .hasSize(1)
+                .first()
+                .satisfies(
+                        i -> {
+                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
+                            assertThat(i.getCondition()).isEqualTo(TEST_CONDITION);
+                        });
     }
 
     @Test
@@ -146,8 +154,10 @@ class ItemRepositoryTest {
         item.setName(updatedName);
         itemRepository.save(item);
 
-        Item updated = itemRepository.findById(item.getId())
-            .orElseThrow(() -> new AssertionError("Updated item not found"));
+        Item updated =
+                itemRepository
+                        .findById(item.getId())
+                        .orElseThrow(() -> new AssertionError("Updated item not found"));
         assertThat(updated.getName()).isEqualTo(updatedName);
         assertThat(updated.getType()).isEqualTo(TEST_TYPE);
         assertThat(updated.getProductionYear()).isEqualTo(TEST_PRODUCTION_YEAR);
@@ -167,8 +177,9 @@ class ItemRepositoryTest {
         Item item2 = createAndSaveItem(TEST_ITEM_NAME + "_1", "1600");
 
         List<Item> items = itemRepository.findByName(TEST_ITEM_NAME + "_1");
-        assertThat(items).hasSize(2)
-            .extracting(Item::getProductionYear)
-            .containsExactlyInAnyOrder(TEST_PRODUCTION_YEAR, "1600");
+        assertThat(items)
+                .hasSize(2)
+                .extracting(Item::getProductionYear)
+                .containsExactlyInAnyOrder(TEST_PRODUCTION_YEAR, "1600");
     }
 }
