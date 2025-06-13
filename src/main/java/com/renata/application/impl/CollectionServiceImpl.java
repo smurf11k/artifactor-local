@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CollectionServiceImpl implements CollectionService {
+final class CollectionServiceImpl implements CollectionService {
 
     private final CollectionRepository collectionRepository;
     private final PersistenceContext persistenceContext;

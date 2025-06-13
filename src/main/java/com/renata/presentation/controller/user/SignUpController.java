@@ -13,7 +13,6 @@ import java.util.UUID;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
@@ -30,7 +29,6 @@ public class SignUpController {
     @Autowired private UserService userService;
     @Autowired private EmailSender emailSender;
 
-    @FXML private Label idLabel;
     @FXML private TextField usernameField;
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
@@ -56,7 +54,6 @@ public class SignUpController {
     }
 
     private void bindFieldsToViewModel() {
-        idLabel.setText(userViewModel.getId().toString());
         usernameField.textProperty().bindBidirectional(userViewModel.usernameProperty());
         emailField.textProperty().bindBidirectional(userViewModel.emailProperty());
         passwordField.textProperty().bindBidirectional(userViewModel.passwordProperty());
@@ -75,13 +72,13 @@ public class SignUpController {
             emailSender.initiateVerification(email);
 
             TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Email Verification");
-            dialog.setHeaderText("Enter Verification Code");
-            dialog.setContentText("Please enter the verification code sent to " + email + ":");
+            dialog.setTitle("Верифікація пошти");
+            dialog.setHeaderText("Введіть код верифікації");
+            dialog.setContentText("Будь ласка введіть код надісланий на " + email + ":");
 
             Optional<String> result = dialog.showAndWait();
             if (!result.isPresent()) {
-                throw new VerificationException("Verification cancelled by user.");
+                throw new VerificationException("Верифікація скасована користувачем.");
             }
 
             emailSender.verifyCodeFromInput(email, result::get);
@@ -96,29 +93,24 @@ public class SignUpController {
             userService.create(userStoreDto);
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("User Information");
-            alert.setHeaderText("User Data Saved Successfully");
+            alert.setTitle("Інформація користувача");
+            alert.setHeaderText("Користувач успішно збережений");
             alert.setContentText(userViewModel.toString());
             alert.showAndWait();
 
         } catch (SignUpException | ValidationException | VerificationException e) {
             showErrorAlert(e.getMessage());
         } catch (Exception e) {
-            showErrorAlert("An unexpected error occurred: " + e.getMessage());
+            showErrorAlert("Щось пішло не так: " + e.getMessage());
         } finally {
             isSaving = false;
         }
     }
 
-    @FXML
-    private void onCancel() {
-        System.out.println("Operation Cancelled");
-    }
-
     private void showErrorAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Registration Failed");
-        alert.setHeaderText("Error");
+        alert.setTitle("Реєстрація не вдалась");
+        alert.setHeaderText("Помилка");
         alert.setContentText(message);
         alert.showAndWait();
     }

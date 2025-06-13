@@ -9,11 +9,11 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 public record ItemUpdateDto(
-        @NotBlank(message = "Відсутній ідентифікатор антикваріату") UUID id,
-        @NotBlank(message = "can't be blank") String name,
-        @NotNull(message = "can't be null") AntiqueType type,
-        @Size(max = 512, message = "should be less than 512 chars") String description,
-        @NotBlank(message = "can't be blank") String productionYear,
-        @Size(max = 256, message = "should be less than 256 chars") String country,
-        @NotNull(message = "can't be null") ItemCondition condition,
+        @NotNull(message = "Відсутній ідентифікатор антикваріату") UUID id,
+        @NotBlank(message = "Назви не може бути пуста") String name,
+        @NotNull(message = "Тип має бути встановлений") AntiqueType type,
+        @Size(max = 512, message = "Опис не може бути довшим за 512 символів") String description,
+        String productionYear, // maybe change to year range with two numbers
+        @Size(max = 256, message = "Країна не може бути довшою за 256 символів") String country,
+        @NotNull(message = "Стан має бути встановлений") ItemCondition condition,
         Path image) {}

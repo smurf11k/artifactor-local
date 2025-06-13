@@ -75,3 +75,16 @@ CREATE TABLE IF NOT EXISTS transactions (
     type             VARCHAR(20) NOT NULL CHECK (type IN ('PURCHASE', 'SALE')),
     timestamp        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 3NF
+CREATE TABLE IF NOT EXISTS market_info (
+    PRIMARY KEY(id),
+    id         UUID,
+    price      DOUBLE PRECISION NOT NULL CHECK (price >= 0),
+    item_id    UUID NOT NULL,
+               FOREIGN KEY (item_id)
+               REFERENCES items(id)
+               ON DELETE CASCADE,
+    type       VARCHAR(20) NOT NULL CHECK (type IN ('LISTED', 'PRICE_UPDATED', 'PURCHASED', 'RELISTED')),
+    timestamp  TIMESTAMP NOT NULL
+);

@@ -9,3 +9,5 @@ DELETE
 FROM transactions;
 DELETE
 FROM item_collection;
+DELETE
+FROM market_info;

@@ -2,33 +2,42 @@ package com.renata.presentation.controller.item;
 
 import com.renata.application.contract.ItemService;
 import com.renata.application.dto.ItemStoreDto;
+import com.renata.application.dto.ItemUpdateDto;
+import com.renata.domain.entities.Item;
 import com.renata.domain.enums.AntiqueType;
 import com.renata.domain.enums.ItemCondition;
 import com.renata.presentation.viewmodel.ItemViewModel;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-/** Контролер для форми створення предмета антикваріату. */
+/** Контролер для форми створення та редагування предмета антикваріату. */
 @Component
 public class ItemController {
 
     @Autowired private ItemService itemService;
+    @Autowired private ApplicationContext context;
+    @Autowired private Validator validator;
 
     @FXML private Label idLabel;
     @FXML private TextField nameField;
@@ -38,29 +47,49 @@ public class ItemController {
     @FXML private TextField countryField;
     @FXML private ComboBox<ItemCondition> conditionComboBox;
     @FXML private TextField imagePathField;
+    @FXML private HBox buttonBox;
+    @FXML private Button cancelButton;
+    @FXML private Button saveButton;
 
     private ItemViewModel itemViewModel;
     private File selectedImageFile;
+    private boolean isEditMode = false;
 
     @FXML
     public void initialize() {
         typeComboBox.getItems().addAll(AntiqueType.values());
-        typeComboBox.setValue(AntiqueType.ANTIQUE);
-
         conditionComboBox.getItems().addAll(ItemCondition.values());
-        conditionComboBox.setValue(ItemCondition.GOOD);
+    }
 
+    public void initForNewItem() {
+        isEditMode = false;
         itemViewModel =
                 new ItemViewModel(
                         UUID.randomUUID(),
-                        "Antique Chair",
-                        "A vintage wooden chair from the 18th century",
+                        "",
+                        "",
                         AntiqueType.ANTIQUE,
-                        "unknown",
-                        "France",
+                        "",
+                        "",
                         ItemCondition.GOOD,
                         null);
+        selectedImageFile = null;
+        bindFieldsToViewModel();
+    }
 
+    public void setItem(Item item) {
+        isEditMode = true;
+        itemViewModel =
+                new ItemViewModel(
+                        item.getId() != null ? item.getId() : UUID.randomUUID(),
+                        item.getName() != null ? item.getName() : "",
+                        item.getDescription() != null ? item.getDescription() : "",
+                        item.getType() != null ? item.getType() : AntiqueType.ANTIQUE,
+                        item.getProductionYear() != null ? item.getProductionYear() : "",
+                        item.getCountry() != null ? item.getCountry() : "",
+                        item.getCondition() != null ? item.getCondition() : ItemCondition.GOOD,
+                        item.getImagePath());
+        selectedImageFile = item.getImagePath() != null ? new File(item.getImagePath()) : null;
         bindFieldsToViewModel();
     }
 
@@ -93,72 +122,112 @@ public class ItemController {
 
     @FXML
     private void onSave() {
-        System.out.println("Saving Item Data: " + itemViewModel);
-
-        ItemStoreDto item =
-                new ItemStoreDto(
-                        itemViewModel.getName().get(),
-                        itemViewModel.getType().get(),
-                        itemViewModel.getDescription().get(),
-                        itemViewModel.getProductionYear().get(),
-                        itemViewModel.getCountry().get(),
-                        itemViewModel.getCondition().get(),
-                        itemViewModel.getImagePath().get() != null
-                                ? Paths.get(itemViewModel.getImagePath().get())
-                                : null);
-
         try {
-            FileInputStream imageStream = null;
             String imageName = null;
+            Path imagePath = null;
+
             if (selectedImageFile != null) {
-                imageStream = new FileInputStream(selectedImageFile);
                 imageName = selectedImageFile.getName();
+                imagePath = Paths.get(selectedImageFile.getAbsolutePath());
             }
 
-            itemService.create(item, imageStream, imageName);
+            if (isEditMode) {
+                ItemUpdateDto itemUpdateDto =
+                        new ItemUpdateDto(
+                                itemViewModel.getId().get(),
+                                itemViewModel.getName().get(),
+                                itemViewModel.getType().get(),
+                                itemViewModel.getDescription().get(),
+                                itemViewModel.getProductionYear().get(),
+                                itemViewModel.getCountry().get(),
+                                itemViewModel.getCondition().get(),
+                                imagePath);
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Item Information");
-            alert.setHeaderText("Item Saved Successfully");
-            alert.setContentText(itemViewModel.toString());
-            alert.showAndWait();
+                Set<ConstraintViolation<ItemUpdateDto>> violations =
+                        validator.validate(itemUpdateDto);
+                if (!violations.isEmpty()) {
+                    String errorMessage =
+                            violations.stream()
+                                    .map(ConstraintViolation::getMessage)
+                                    .collect(Collectors.joining("; "));
+                    showErrorAlert("Помилка валідації", "Неправильні введені дані", errorMessage);
+                    return;
+                }
+
+                if (selectedImageFile != null) {
+                    try (FileInputStream imageStream = new FileInputStream(selectedImageFile)) {
+                        itemService.update(
+                                itemViewModel.getId().get(), itemUpdateDto, imageStream, imageName);
+                    }
+                } else {
+                    itemService.update(itemViewModel.getId().get(), itemUpdateDto, null, null);
+                }
+            } else {
+                ItemStoreDto itemStoreDto =
+                        new ItemStoreDto(
+                                itemViewModel.getName().get(),
+                                itemViewModel.getType().get(),
+                                itemViewModel.getDescription().get(),
+                                itemViewModel.getProductionYear().get(),
+                                itemViewModel.getCountry().get(),
+                                itemViewModel.getCondition().get(),
+                                imagePath);
+
+                Set<ConstraintViolation<ItemStoreDto>> violations =
+                        validator.validate(itemStoreDto);
+                if (!violations.isEmpty()) {
+                    String errorMessage =
+                            violations.stream()
+                                    .map(ConstraintViolation::getMessage)
+                                    .collect(Collectors.joining("; "));
+                    showErrorAlert("Помилка валідації", "Неправильні введені дані", errorMessage);
+                    return;
+                }
+
+                if (selectedImageFile != null) {
+                    try (FileInputStream imageStream = new FileInputStream(selectedImageFile)) {
+                        itemService.create(itemStoreDto, imageStream, imageName);
+                    }
+                } else {
+                    itemService.create(itemStoreDto, null, null);
+                }
+            }
+
+            Stage stage = (Stage) cancelButton.getScene().getWindow();
+            stage.close();
+
+            showInfoAlert(
+                    "Успіх",
+                    isEditMode ? "Предмет успішно оновлено" : "Предмет успішно збережено",
+                    itemViewModel.toString());
 
         } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Failed to Save Item");
-            alert.setContentText("Error with image file: " + e.getMessage());
-            alert.showAndWait();
+            showErrorAlert(
+                    "Помилка",
+                    "Не вийшло зберегти предмет",
+                    "Помилка із зображенням предмету: " + e.getMessage());
         }
     }
 
     @FXML
     private void onCancel() {
-        System.out.println("Operation Cancelled");
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 
-    @FXML
-    private void onViewList() {
-        try {
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass()
-                                    .getResource(
-                                            "/com/renata/presentation/view/ItemListView.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Item List");
-            stage.show();
+    private void showInfoAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
 
-            Stage currentStage = (Stage) nameField.getScene().getWindow();
-            currentStage.close();
-        } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Failed to Load Item List");
-            alert.setContentText("Error: " + e.getMessage());
-            alert.showAndWait();
-        }
+    private void showErrorAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

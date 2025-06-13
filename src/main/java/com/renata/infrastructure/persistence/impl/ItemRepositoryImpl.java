@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 /** Реалізація репозиторію для специфічних операцій з антикваріатом. */
 @Repository
-public class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements ItemRepository {
+final class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements ItemRepository {
 
     /**
      * Конструктор репозиторію.

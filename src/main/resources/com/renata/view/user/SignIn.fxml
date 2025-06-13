@@ -12,7 +12,7 @@
 <VBox xmlns:fx="http://javafx.com/fxml" xmlns:atlantafx="atlantafx.styles" alignment="CENTER"
   spacing="20" styleClass="form-container"
   fx:controller="com.renata.presentation.controller.user.SignInController">
-  <Label text="Авторизація в систему" styleClass="title-1" />
+  <Label text="Авторизація" styleClass="title-1" />
 
   <VBox spacing="10" alignment="CENTER">
     <HBox alignment="CENTER" spacing="10">

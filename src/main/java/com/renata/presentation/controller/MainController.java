@@ -33,14 +33,20 @@ public class MainController {
             switch (selectedButton.getText()) {
                 case "Авторизація" -> switchPage("/com/renata/view/user/SignIn.fxml");
                 case "Реєстрація" -> switchPage("/com/renata/view/user/SignUp.fxml");
-                case "Додати антикваріат" -> switchPage("/com/renata/view/item/AddItem.fxml");
-                case "Переглянути антикваріат" -> switchPage("/com/renata/view/item/ItemList.fxml");
+                case "Антикваріат" -> switchPage("/com/renata/view/item/ItemList.fxml");
+                case "Транзакції" ->
+                        switchPage("/com/renata/view/transaction/TransactionList.fxml");
+                case "Колекції" -> switchPage("/com/renata/view/collection/CollectionList.fxml");
+                case "Ринок" -> switchPage("/com/renata/view/market/Market.fxml");
                 default ->
                         System.err.println(
                                 String.format("Unknown selection: %s", selectedButton.getText()));
             }
         }
     }
+
+    // TODO: add a theme change button (switch), check Runner.java for the atlantafx primer light
+    // and dark themes
 
     private void switchPage(String fxmlFile) {
         try {

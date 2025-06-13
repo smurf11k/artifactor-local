@@ -9,7 +9,7 @@ import com.renata.infrastructure.persistence.contract.UserRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthServiceImpl implements AuthService {
+final class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordService passwordService;

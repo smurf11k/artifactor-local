@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 /** Реалізація репозиторію для специфічних операцій з транзакціями. */
 @Repository
-public class TransactionRepositoryImpl extends GenericRepository<Transaction, UUID>
+final class TransactionRepositoryImpl extends GenericRepository<Transaction, UUID>
         implements TransactionRepository {
 
     /**

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 
 /** Реалізація репозиторію для специфічних операцій з колекціями. */
 @Repository
-public class CollectionRepositoryImpl extends GenericRepository<Collection, UUID>
+final class CollectionRepositoryImpl extends GenericRepository<Collection, UUID>
         implements CollectionRepository {
 
     /**

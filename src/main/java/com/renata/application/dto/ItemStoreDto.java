@@ -8,10 +8,10 @@ import jakarta.validation.constraints.Size;
 import java.nio.file.Path;
 
 public record ItemStoreDto(
-        @NotBlank(message = "can't be blank") String name,
-        @NotNull(message = "can't be null") AntiqueType type,
-        @Size(max = 512, message = "should be less than 512 chars") String description,
-        @NotBlank(message = "can't be blank") String productionYear,
-        @Size(max = 256, message = "should be less than 256 chars") String country,
-        @NotNull(message = "can't be null") ItemCondition condition,
+        @NotBlank(message = "Назва не може бути порожня") String name,
+        @NotNull(message = "Тип має бути встановлений") AntiqueType type,
+        @Size(max = 512, message = "Опис не може бути довшим за 512 символів") String description,
+        String productionYear, // set to unknown if empty
+        @Size(max = 256, message = "Країна не може бути довшою за 256 символів") String country,
+        @NotNull(message = "Стан має бути встановлений") ItemCondition condition,
         Path image) {}

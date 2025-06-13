@@ -2,10 +2,12 @@ package com.renata.infrastructure.persistence;
 
 import com.renata.domain.entities.Collection;
 import com.renata.domain.entities.Item;
+import com.renata.domain.entities.MarketInfo;
 import com.renata.domain.entities.Transaction;
 import com.renata.domain.entities.User;
 import com.renata.infrastructure.persistence.contract.CollectionRepository;
 import com.renata.infrastructure.persistence.contract.ItemRepository;
+import com.renata.infrastructure.persistence.contract.MarketInfoRepository;
 import com.renata.infrastructure.persistence.contract.TransactionRepository;
 import com.renata.infrastructure.persistence.contract.UserRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
@@ -31,6 +33,7 @@ public class PersistenceContext {
     private final TransactionRepository transactionRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
+    private final MarketInfoRepository marketInfoRepository;
     private Connection connection;
     private final Map<Class<?>, Repository<?, ?>> repositories;
     private final List<Object> newEntities;
@@ -47,12 +50,14 @@ public class PersistenceContext {
             ItemRepository itemRepository,
             TransactionRepository transactionRepository,
             CollectionRepository collectionRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            MarketInfoRepository marketInfoRepository) {
         this.connectionPool = connectionPool;
         this.itemRepository = itemRepository;
         this.transactionRepository = transactionRepository;
         this.collectionRepository = collectionRepository;
         this.userRepository = userRepository;
+        this.marketInfoRepository = marketInfoRepository;
 
         this.repositories = new HashMap<>();
         this.newEntities = new ArrayList<>();
@@ -67,6 +72,7 @@ public class PersistenceContext {
         this.registerRepository(Transaction.class, transactionRepository);
         this.registerRepository(Collection.class, collectionRepository);
         this.registerRepository(User.class, userRepository);
+        this.registerRepository(MarketInfo.class, marketInfoRepository);
     }
 
     /**

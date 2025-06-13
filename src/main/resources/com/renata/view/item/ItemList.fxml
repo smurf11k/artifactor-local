@@ -1,23 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.image.ImageView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.item.ItemListController" spacing="10" alignment="CENTER">
-  <TableView fx:id="itemTable">
-    <columns>
-      <TableColumn fx:id="nameColumn" text="Name" prefWidth="150"/>
-      <TableColumn fx:id="typeColumn" text="Type" prefWidth="100"/>
-      <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="200"/>
-      <TableColumn fx:id="productionYearColumn" text="Production Year" prefWidth="100"/>
-      <TableColumn fx:id="countryColumn" text="Country" prefWidth="100"/>
-      <TableColumn fx:id="conditionColumn" text="Condition" prefWidth="100"/>
-      <TableColumn fx:id="imageColumn" text="Image" prefWidth="100"/>
-    </columns>
-  </TableView>
-  <HBox spacing="10" alignment="CENTER">
-    <Button fx:id="refreshButton" text="Refresh" onAction="#onRefresh"/>
-    <Button fx:id="backButton" text="Back" onAction="#onBack"/>
+<?import javafx.scene.image.ImageView?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.item.ItemListController" styleClass="root" spacing="10" alignment="TOP_CENTER">
+  <HBox alignment="TOP_LEFT" VBox.vgrow="ALWAYS">
+    <!-- Left: Item Details with ScrollPane -->
+    <ScrollPane fitToWidth="true" pannable="true" prefWidth="300">
+      <content>
+        <VBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 10;">
+          <ImageView fx:id="itemImage" fitWidth="270" fitHeight="270" preserveRatio="true" smooth="true" />
+          <Label fx:id="nameLabel" text="Назва: " wrapText="true" style="-fx-font-weight: bold;" maxWidth="280" />
+          <Label fx:id="countryLabel" text="Країна: " wrapText="true" maxWidth="280" />
+          <Label fx:id="productionYearLabel" text="Рік виготовлення: " wrapText="true" maxWidth="280" />
+          <Label fx:id="typeLabel" text="Тип: " wrapText="true" maxWidth="280" />
+          <Label fx:id="conditionLabel" text="Стан: " wrapText="true" maxWidth="280" />
+          <Label fx:id="priceLabel" text="Ціна: " wrapText="true" maxWidth="280" />
+          <Label fx:id="timestampLabel" text="Останнє оновлення ціни: " wrapText="true" maxWidth="280" />
+          <Label fx:id="descriptionLabel" text="Опис: " wrapText="true" maxWidth="280">
+            <VBox.margin>
+              <Insets bottom="10" />
+            </VBox.margin>
+          </Label>
+          <HBox spacing="20" alignment="TOP_LEFT">
+            <Button fx:id="editButton" text="Редагувати" onAction="#handleEdit" disable="true" styleClass="accent">
+              <graphic>
+                <FontIcon iconLiteral="bx-pencil" iconSize="16" />
+              </graphic>
+            </Button>
+            <Button fx:id="deleteButton" text="Видалити" onAction="#handleDelete" disable="true" styleClass="danger">
+              <graphic>
+                <FontIcon iconLiteral="bx-trash" iconSize="16" />
+              </graphic>
+            </Button>
+          </HBox>
+        </VBox>
+      </content>
+    </ScrollPane>
+    <!-- Vertical Divider -->
+    <Separator orientation="VERTICAL">
+      <VBox.vgrow>ALWAYS</VBox.vgrow>
+    </Separator>
+    <!-- Right: Filters and Item List -->
+    <VBox spacing="10" alignment="TOP_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10;">
+      <!-- Filters -->
+      <GridPane hgap="10" vgap="10" alignment="TOP_LEFT">
+        <padding>
+          <Insets top="0" right="10" bottom="10" left="0" />
+        </padding>
+        <Label text="Пошук за назвою:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+        <TextField fx:id="searchField" promptText="Впишіть назву предмету" onAction="#applySearchAndFilters" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+        <Label text="Тип:" GridPane.rowIndex="0" GridPane.columnIndex="2" />
+        <ComboBox fx:id="typeFilter" GridPane.rowIndex="0" GridPane.columnIndex="3" prefWidth="150"/>
+        <Label text="Пошук за країною:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+        <TextField fx:id="countryFilter" promptText="Впишіть країну" onAction="#applySearchAndFilters" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+        <Label text="Стан:" GridPane.rowIndex="1" GridPane.columnIndex="2" />
+        <ComboBox fx:id="conditionFilter" GridPane.rowIndex="1" GridPane.columnIndex="3" prefWidth="150"/>
+        <HBox spacing="10" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="4" alignment="TOP_LEFT">
+          <Button fx:id="applyFilterButton" text="Застосувати" onAction="#applySearchAndFilters">
+            <graphic>
+              <FontIcon iconLiteral="bx-filter" iconSize="16" />
+            </graphic>
+          </Button>
+          <Button fx:id="clearFilterButton" text="Очистити" onAction="#clearFilters">
+            <graphic>
+              <FontIcon iconLiteral="bx-reset" iconSize="16" />
+            </graphic>
+          </Button>
+          <Button fx:id="refreshButton" text="Перезавантажити" onAction="#onRefresh">
+            <graphic>
+              <FontIcon iconLiteral="bx-refresh" iconSize="16" />
+            </graphic>
+          </Button>
+          <Button fx:id="addNewButton" text="Додати новий" onAction="#onAddNew">
+            <graphic>
+              <FontIcon iconLiteral="bx-plus" iconSize="16" />
+            </graphic>
+          </Button>
+        </HBox>
+      </GridPane>
+      <!-- Item List -->
+      <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="nameColumn" text="Назва" />
+          <TableColumn fx:id="typeColumn" text="Тип" prefWidth="30"/>
+        </columns>
+      </TableView>
+    </VBox>
   </HBox>
 </VBox>

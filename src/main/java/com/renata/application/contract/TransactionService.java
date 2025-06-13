@@ -1,6 +1,7 @@
 package com.renata.application.contract;
 
 import com.renata.application.dto.TransactionStoreDto;
+import com.renata.application.dto.TransactionUpdateDto;
 import com.renata.domain.entities.Transaction;
 import com.renata.domain.enums.TransactionType;
 import java.time.LocalDateTime;
@@ -22,10 +23,10 @@ public interface TransactionService {
      * Оновлює існуючу транзакцію.
      *
      * @param id ідентифікатор транзакції
-     * @param transaction оновлені дані транзакції
+     * @param transactionUpdateDto оновлені дані транзакції
      * @return оновлена транзакція
      */
-    Transaction update(UUID id, Transaction transaction);
+    Transaction update(UUID id, TransactionUpdateDto transactionUpdateDto);
 
     /**
      * Видаляє транзакцію.

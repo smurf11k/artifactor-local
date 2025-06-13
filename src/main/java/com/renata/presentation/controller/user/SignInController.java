@@ -33,6 +33,7 @@ public class SignInController {
         String username = usernameField.getText();
         String password = passwordField.getText();
         boolean rememberMe = rememberMeCheckBox.isSelected();
+        // TODO: finish rememberMe logic and add login for enter click
 
         try {
             boolean authenticated = authenticationService.login(username, password);

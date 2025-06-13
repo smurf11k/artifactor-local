@@ -26,9 +26,11 @@ public class Runner extends Application {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
         var mainFxmlResource = Runner.class.getResource("/com/renata/view/Main.fxml");
         Parent parent = (Parent) fxmlLoader.load(mainFxmlResource);
-        Scene scene = new Scene(parent, 900, 600);
+        Scene scene = new Scene(parent, 1110, 650);
         stage.setTitle("Artifactor");
         stage.setScene(scene);
+        stage.setMinWidth(1110);
+        stage.setMinHeight(650);
         stage.show();
     }
 
@@ -38,8 +40,8 @@ public class Runner extends Application {
         var databaseInitializer = springContext.getBean(PersistenceInitializer.class);
 
         // Підключення atlantaFX
-        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
         try {
             databaseInitializer.init();

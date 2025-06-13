@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 /** Реалізація репозиторію для специфічних операцій з користувачами. */
 @Repository
-public class UserRepositoryImpl extends GenericRepository<User, UUID> implements UserRepository {
+final class UserRepositoryImpl extends GenericRepository<User, UUID> implements UserRepository {
 
     /**
      * Конструктор репозиторію.

@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SignUpServiceImpl implements SignUpService {
+final class SignUpServiceImpl implements SignUpService {
 
     private final UserService userService;
     private final EmailSender emailSender;

@@ -4,35 +4,42 @@
 <?import javafx.scene.layout.*?>
 
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<BorderPane fx:id="root" xmlns:fx="http://javafx.com/fxml"
+<BorderPane fx:id="root" minWidth="1100" minHeight="600" xmlns:fx="http://javafx.com/fxml"
   fx:controller="com.renata.presentation.controller.MainController">
   <fx:define>
     <ToggleGroup fx:id="toggleGroup" />
   </fx:define>
   <left>
-    <VBox spacing="10" styleClass="menu">
-      <ToggleButton text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection">
+    <VBox spacing="10" styleClass="menu" style="-fx-padding: 20;">
+    <ToggleButton text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
         <graphic>
           <FontIcon iconLiteral="bx-door-open" />
         </graphic>
       </ToggleButton>
 
-      <ToggleButton text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection">
+      <ToggleButton text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
         <graphic>
           <FontIcon iconLiteral="bx-user-plus" />
         </graphic>
       </ToggleButton>
-
-      <ToggleButton text="Додати антикваріат" toggleGroup="$toggleGroup"
-        onAction="#handleMenuSelection">
-        <graphic>
-          <FontIcon iconLiteral="bx-plus" />
-        </graphic>
-      </ToggleButton>
-      <ToggleButton text="Переглянути антикваріат" toggleGroup="$toggleGroup"
-        onAction="#handleMenuSelection">
+      <ToggleButton text="Антикваріат" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
         <graphic>
           <FontIcon iconLiteral="bx-list-ul" />
+        </graphic>
+      </ToggleButton>
+      <ToggleButton text="Транзакції" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+        <graphic>
+          <FontIcon iconLiteral="bx-transfer" />
+        </graphic>
+      </ToggleButton>
+      <ToggleButton text="Колекції" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+        <graphic>
+          <FontIcon iconLiteral="bx-collection" />
+        </graphic>
+      </ToggleButton>
+      <ToggleButton text="Ринок" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+        <graphic>
+          <FontIcon iconLiteral="bx-dollar" />
         </graphic>
       </ToggleButton>
     </VBox>

@@ -5,6 +5,8 @@ import com.renata.application.dto.ItemStoreDto;
 import com.renata.application.dto.ItemUpdateDto;
 import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.Item;
+import com.renata.domain.enums.AntiqueType;
+import com.renata.domain.enums.ItemCondition;
 import com.renata.infrastructure.file.FileStorageService;
 import com.renata.infrastructure.file.exception.FileStorageException;
 import com.renata.infrastructure.persistence.PersistenceContext;
@@ -22,7 +24,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ItemServiceImpl implements ItemService {
+final class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final PersistenceContext persistenceContext;
@@ -147,5 +149,37 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> findAll(int offset, int limit) {
         return itemRepository.findAll(offset, limit);
+    }
+
+    @Override
+    public List<Item> findByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return findAll(0, 100);
+        }
+        return itemRepository.findByName(name);
+    }
+
+    @Override
+    public List<Item> findByType(AntiqueType type) {
+        if (type == null) {
+            return findAll(0, 100);
+        }
+        return itemRepository.findByType(type);
+    }
+
+    @Override
+    public List<Item> findByCountry(String country) {
+        if (country == null || country.trim().isEmpty()) {
+            return findAll(0, 100);
+        }
+        return itemRepository.findByCountry(country);
+    }
+
+    @Override
+    public List<Item> findByCondition(ItemCondition condition) {
+        if (condition == null) {
+            return findAll(0, 100);
+        }
+        return itemRepository.findByCondition(condition);
     }
 }
