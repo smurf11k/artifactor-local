@@ -94,7 +94,7 @@ public class ItemController {
     }
 
     private void bindFieldsToViewModel() {
-        idLabel.setText(itemViewModel.getId().toString());
+        idLabel.textProperty().bind(itemViewModel.idProperty().asString());
         nameField.textProperty().bindBidirectional(itemViewModel.nameProperty());
         descriptionArea.textProperty().bindBidirectional(itemViewModel.descriptionProperty());
         typeComboBox.valueProperty().bindBidirectional(itemViewModel.typeProperty());

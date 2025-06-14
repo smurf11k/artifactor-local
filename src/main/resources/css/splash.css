@@ -1,0 +1,17 @@
+
+#splash-progress-bar {
+  -fx-scale-y: 0.3;
+  -fx-pref-height: 40px
+}
+
+#splash-progress-bar .bar {
+  -fx-background-color: #bd1201;
+  -fx-background-radius: 3px;
+  -fx-pref-height: 15px;
+}
+
+#splash-progress-bar .track {
+  -fx-background-color: transparent;
+  -fx-background-radius: 3px;
+  -fx-pref-height: 15px;
+}

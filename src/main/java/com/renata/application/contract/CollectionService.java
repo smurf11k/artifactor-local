@@ -89,4 +89,12 @@ public interface CollectionService {
      * @param collectionId ідентифікатор колекції для очищення
      */
     void clearCollection(UUID collectionId);
+
+    /**
+     * Пошук колекції за назвою
+     *
+     * @param name назва колекції
+     * @return занйдена колекція
+     */
+    List<Collection> findByName(String name);
 }

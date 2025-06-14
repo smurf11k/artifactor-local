@@ -27,7 +27,8 @@ public class ItemTestDataGenerator {
                             faker.address().country(),
                             ItemCondition.values()[
                                     faker.random().nextInt(ItemCondition.values().length)],
-                            null // No image for test data
+                            null // TODO: when choosing an image copy it to the items folder and use
+                            // a relative path instead of full path
                             );
             itemService.create(item, null, null);
         }

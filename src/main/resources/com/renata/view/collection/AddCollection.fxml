@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+
+<GridPane xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.renata.presentation.controller.collection.CollectionController"
+  alignment="CENTER" hgap="10" vgap="10" style="-fx-padding: 20;">
+
+  <Label text="ID колекції:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+  <Label fx:id="idLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+  <Label text="Назва колекції:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+  <TextField fx:id="nameField" GridPane.rowIndex="1" GridPane.columnIndex="1" promptText="Введіть назву колекції" prefWidth="300"/>
+
+  <Label text="ID користувача:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+  <TextField fx:id="userIdField" GridPane.rowIndex="2" GridPane.columnIndex="1" promptText="Введіть ID користувача" prefWidth="300"/>
+
+  <Label text="Час створення:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+  <TextField fx:id="createdAtField" GridPane.rowIndex="3" GridPane.columnIndex="1" promptText="Формат: yyyy-MM-dd HH:mm:ss" prefWidth="300" editable="false"/>
+
+  <HBox fx:id="buttonBox" GridPane.rowIndex="4" GridPane.columnIndex="1" spacing="10" alignment="CENTER_RIGHT">
+    <Button fx:id="saveButton" text="Зберегти" onAction="#onSave" styleClass="success"/>
+    <Button fx:id="cancelButton" text="Скасувати" onAction="#onCancel" styleClass="danger"/>
+  </HBox>
+
+</GridPane>

@@ -274,6 +274,7 @@ public class ItemListController {
             ItemController controller = context.getBean(ItemController.class);
             controller.initForNewItem();
             Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
             stage.setScene(new Scene(root));
             stage.setTitle("Додавання антикваріату");
             stage.show();
@@ -338,6 +339,7 @@ public class ItemListController {
                 ItemController controller = context.getBean(ItemController.class);
                 controller.setItem(selectedItem);
                 Stage stage = new Stage();
+                stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
                 stage.setScene(new Scene(root));
                 stage.setTitle("Редагування антикваріату");
                 stage.show();

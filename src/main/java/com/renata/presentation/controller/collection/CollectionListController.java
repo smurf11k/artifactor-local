@@ -1,19 +1,17 @@
-package com.renata.presentation.controller.transaction;
+package com.renata.presentation.controller.collection;
 
 import atlantafx.base.theme.Styles;
-import com.renata.application.contract.ItemService;
-import com.renata.application.contract.TransactionService;
+import com.renata.application.contract.AuthService;
+import com.renata.application.contract.CollectionService;
 import com.renata.application.contract.UserService;
-import com.renata.domain.entities.Item;
-import com.renata.domain.entities.Transaction;
+import com.renata.application.exception.AuthException;
+import com.renata.domain.entities.Collection;
 import com.renata.domain.entities.User;
-import com.renata.domain.enums.TransactionType;
 import com.renata.presentation.util.SpringFXMLLoader;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,30 +30,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-/** Контролер для табличного відображення списку транзакцій. */
+/** Контролер для табличного відображення списку колекцій. */
 @Component
-public class TransactionListController {
+public class CollectionListController {
 
-    @Autowired private TransactionService transactionService;
+    @Autowired private CollectionService collectionService;
     @Autowired private UserService userService;
-    @Autowired private ItemService itemService;
+    @Autowired private AuthService authService;
     @Autowired private ApplicationContext context;
 
-    @FXML private TableView<Transaction> transactionTable;
-    @FXML private TableColumn<Transaction, UUID> idColumn;
-    @FXML private TableColumn<Transaction, String> userIdColumn;
-    @FXML private TableColumn<Transaction, String> itemIdColumn;
-    @FXML private TableColumn<Transaction, TransactionType> typeColumn;
-    @FXML private TableColumn<Transaction, String> timestampColumn;
-    @FXML private TableColumn<Transaction, Void> actionsColumn;
+    @FXML private TableView<Collection> collectionTable;
+    @FXML private TableColumn<Collection, String> nameColumn;
+    @FXML private TableColumn<Collection, String> usernameColumn;
+    @FXML private TableColumn<Collection, String> createdAtColumn;
+    @FXML private TableColumn<Collection, Void> actionsColumn;
     @FXML private TextField searchField;
-    @FXML private ComboBox<TransactionType> typeFilter;
     @FXML private TextField usernameFilter;
+    @FXML private Button addButton;
     @FXML private Button applyFilterButton;
     @FXML private Button clearFilterButton;
     @FXML private Button refreshButton;
 
-    private ObservableList<Transaction> transactionList = FXCollections.observableArrayList();
+    private ObservableList<Collection> collectionList = FXCollections.observableArrayList();
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -71,8 +67,8 @@ public class TransactionListController {
                                                         "An unexpected error occurred: "
                                                                 + throwable.getMessage())));
 
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        userIdColumn.setCellValueFactory(
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        usernameColumn.setCellValueFactory(
                 cellData -> {
                     UUID userId = cellData.getValue().getUserId();
                     if (userId != null) {
@@ -86,21 +82,10 @@ public class TransactionListController {
                     }
                     return new SimpleObjectProperty<>("Unknown");
                 });
-        itemIdColumn.setCellValueFactory(
-                cellData -> {
-                    UUID itemId = cellData.getValue().getItemId();
-                    if (itemId != null) {
-                        Optional<Item> itemOpt = itemService.findById(itemId);
-                        return new SimpleObjectProperty<>(
-                                itemOpt.map(Item::getName).orElse("Unknown"));
-                    }
-                    return new SimpleObjectProperty<>("Unknown");
-                });
-        typeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
-        timestampColumn.setCellValueFactory(
+        createdAtColumn.setCellValueFactory(
                 cellData ->
                         new SimpleObjectProperty<>(
-                                cellData.getValue().getTimestamp().format(DATE_TIME_FORMATTER)));
+                                cellData.getValue().getCreatedAt().format(DATE_TIME_FORMATTER)));
 
         actionsColumn.setCellFactory(
                 param ->
@@ -116,9 +101,9 @@ public class TransactionListController {
                                 editButton.getStyleClass().add("edit-button");
                                 editButton.setOnAction(
                                         event -> {
-                                            Transaction transaction =
+                                            Collection collection =
                                                     getTableView().getItems().get(getIndex());
-                                            handleEdit(transaction);
+                                            handleEdit(collection);
                                         });
 
                                 FontIcon deleteIcon = new FontIcon("bx-trash");
@@ -128,9 +113,9 @@ public class TransactionListController {
                                 deleteButton.getStyleClass().add("delete-button");
                                 deleteButton.setOnAction(
                                         event -> {
-                                            Transaction transaction =
+                                            Collection collection =
                                                     getTableView().getItems().get(getIndex());
-                                            handleDelete(transaction);
+                                            handleDelete(collection);
                                         });
                             }
 
@@ -146,54 +131,41 @@ public class TransactionListController {
                             }
                         });
 
-        typeFilter.getItems().addAll(TransactionType.values());
-        typeFilter.setValue(null);
-
-        transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        transactionTable.setItems(transactionList);
-        loadTransactions();
+        collectionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        collectionTable.setItems(collectionList);
+        loadCollections();
     }
 
     @FXML
     private void onRefresh() {
         clearFilters();
-        loadTransactions();
+        loadCollections();
     }
 
     @FXML
     private void applySearchAndFilters() {
         try {
-            List<Transaction> filteredTransactions = new ArrayList<>();
+            List<Collection> filteredCollections = new ArrayList<>();
             String searchText = searchField.getText() != null ? searchField.getText().trim() : "";
-            TransactionType selectedType = typeFilter.getValue();
-            String userIdText =
+            String userText =
                     usernameFilter.getText() != null ? usernameFilter.getText().trim() : "";
 
             if (!searchText.isEmpty()) {
-                List<Item> items = itemService.findByName(searchText);
-                if (!items.isEmpty()) {
-                    for (Item item : items) {
-                        filteredTransactions.addAll(transactionService.findByItemId(item.getId()));
-                    }
-                }
-
+                filteredCollections.addAll(collectionService.findByName(searchText));
             } else {
-                filteredTransactions.addAll(transactionService.findAll(0, 100));
+                filteredCollections.addAll(collectionService.findAll(0, 100));
             }
 
-            if (selectedType != null) {
-                filteredTransactions.retainAll(transactionService.findByType(selectedType));
-            }
-
-            if (!userIdText.isEmpty()) {
-
-                User user = userService.findByUsername(userIdText);
+            if (!userText.isEmpty()) {
+                User user = userService.findByUsername(userText);
                 if (user != null) {
-                    filteredTransactions.retainAll(transactionService.findByUserId(user.getId()));
+                    filteredCollections.retainAll(collectionService.findByUserId(user.getId()));
+                } else {
+                    filteredCollections.clear();
                 }
             }
 
-            transactionList.setAll(filteredTransactions);
+            collectionList.setAll(filteredCollections);
         } catch (Exception e) {
             showErrorAlert(
                     "Помилка застосування фільтрів",
@@ -205,61 +177,97 @@ public class TransactionListController {
     private void clearFilters() {
         try {
             searchField.clear();
-            typeFilter.setValue(null);
             usernameFilter.clear();
-            loadTransactions();
+            loadCollections();
         } catch (Exception e) {
             showErrorAlert(
                     "Помилка очистки фільтрів", "Не вийшло очистити фільтри: " + e.getMessage());
         }
     }
 
-    private void handleEdit(Transaction transaction) {
+    @FXML
+    private void handleAdd() {
         try {
             SpringFXMLLoader loader = new SpringFXMLLoader(context);
-            URL fxmlUrl =
-                    getClass().getResource("/com/renata/view/transaction/EditTransaction.fxml");
+            URL fxmlUrl = getClass().getResource("/com/renata/view/collection/AddCollection.fxml");
+            if (fxmlUrl == null) {
+                throw new Exception("AddCollection.fxml not found");
+            }
             Parent root = (Parent) loader.load(fxmlUrl);
-            TransactionController controller = context.getBean(TransactionController.class);
-            controller.setTransaction(transaction);
+            CollectionController controller = context.getBean(CollectionController.class);
+            controller.setNewCollection();
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
             stage.setScene(new Scene(root));
-            stage.setTitle("Редагування транзакції");
+            stage.setTitle("Додавання нової колекції");
+            stage.setOnHidden(event -> loadCollections()); // Refresh table after add
             stage.show();
         } catch (Exception e) {
             showErrorAlert(
-                    "Не вийшло відкрити вікно редагування транзакції",
-                    "Помилка: " + e.getMessage());
+                    "Не вийшло відкрити вікно додавання колекції", "Помилка: " + e.getMessage());
         }
     }
 
-    private void handleDelete(Transaction transaction) {
+    private void handleEdit(Collection collection) {
         try {
-            transactionService.delete(transaction.getId());
-            loadTransactions();
-            showInfoAlert(
-                    "Транзакцію видалено",
-                    "Транзакцію з ID '" + transaction.getId() + "' успішно видалено.");
+            // Check if the current user is authorized to edit this collection
+            UUID currentUserId = authService.getCurrentUser().getId();
+            if (!collection.getUserId().equals(currentUserId)) {
+                showErrorAlert(
+                        "Немає доступу", "Ви не маєте дозволу на редагування цієї колекції.");
+                return;
+            }
+
+            SpringFXMLLoader loader = new SpringFXMLLoader(context);
+            URL fxmlUrl = getClass().getResource("/com/renata/view/collection/AddCollection.fxml");
+            if (fxmlUrl == null) {
+                throw new Exception("AddCollection.fxml not found");
+            }
+            Parent root = (Parent) loader.load(fxmlUrl);
+            CollectionController controller = context.getBean(CollectionController.class);
+            controller.setCollection(collection);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
+            stage.setScene(new Scene(root));
+            stage.setTitle("Редагування колекції");
+            stage.setOnHidden(event -> loadCollections()); // Refresh table after edit
+            stage.show();
+        } catch (AuthException e) {
+            showErrorAlert(
+                    "Помилка авторизації",
+                    "Не вдалося перевірити права доступу: " + e.getMessage());
         } catch (Exception e) {
             showErrorAlert(
-                    "Не вийшло видалити транзакцію",
-                    "Помилка видалення транзакції з ID '"
-                            + (transaction != null ? transaction.getId() : "unknown")
+                    "Не вийшло відкрити вікно редагування колекції", "Помилка: " + e.getMessage());
+        }
+    }
+
+    private void handleDelete(Collection collection) {
+        try {
+            collectionService.delete(collection.getId());
+            loadCollections();
+            showInfoAlert(
+                    "Колекцію видалено",
+                    "Колекцію з ID '" + collection.getId() + "' успішно видалено.");
+        } catch (Exception e) {
+            showErrorAlert(
+                    "Не вийшло видалити колекцію",
+                    "Помилка видалення колекції з ID '"
+                            + (collection != null ? collection.getId() : "unknown")
                             + "': "
                             + e.getMessage());
         }
     }
 
-    private void loadTransactions() {
+    private void loadCollections() {
         try {
-            List<Transaction> transactions = transactionService.findAll(0, 100);
-            transactionList.clear();
-            transactionList.addAll(transactions);
+            List<Collection> collections = collectionService.findAll(0, 100);
+            collectionList.clear();
+            collectionList.addAll(collections);
         } catch (Exception e) {
             showErrorAlert(
-                    "Не вийшло завантажити транзакції",
-                    "Помилка завантаження транзакцій: " + e.getMessage());
+                    "Не вийшло завантажити колекції",
+                    "Помилка завантаження колекцій: " + e.getMessage());
         }
     }
 

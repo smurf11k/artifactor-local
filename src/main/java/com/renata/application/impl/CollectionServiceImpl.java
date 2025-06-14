@@ -158,4 +158,9 @@ final class CollectionServiceImpl implements CollectionService {
         collectionRepository.clearCollection(collectionId);
         persistenceContext.commit();
     }
+
+    @Override
+    public List<Collection> findByName(String name) {
+        return collectionRepository.findByName(name);
+    }
 }

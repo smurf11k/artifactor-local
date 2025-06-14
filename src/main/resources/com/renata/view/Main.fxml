@@ -2,26 +2,16 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+
 <BorderPane fx:id="root" minWidth="1100" minHeight="600" xmlns:fx="http://javafx.com/fxml"
   fx:controller="com.renata.presentation.controller.MainController">
   <fx:define>
     <ToggleGroup fx:id="toggleGroup" />
   </fx:define>
   <left>
-    <VBox spacing="10" styleClass="menu" style="-fx-padding: 20;">
-    <ToggleButton text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
-        <graphic>
-          <FontIcon iconLiteral="bx-door-open" />
-        </graphic>
-      </ToggleButton>
-
-      <ToggleButton text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
-        <graphic>
-          <FontIcon iconLiteral="bx-user-plus" />
-        </graphic>
-      </ToggleButton>
+    <VBox fx:id="menuPane" spacing="10" styleClass="menu" style="-fx-padding: 20;">
+      <!-- Permanent Menu Buttons -->
       <ToggleButton text="Антикваріат" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
         <graphic>
           <FontIcon iconLiteral="bx-list-ul" />
@@ -42,6 +32,28 @@
           <FontIcon iconLiteral="bx-dollar" />
         </graphic>
       </ToggleButton>
+      <!-- Spacer to push auth buttons and user info to the bottom -->
+      <VBox VBox.vgrow="ALWAYS" />
+      <!-- Auth Buttons, shown when not authenticated -->
+      <VBox fx:id="menuButtonsPane" spacing="10">
+        <ToggleButton fx:id="signInButton" text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+          <graphic>
+            <FontIcon iconLiteral="bx-door-open" />
+          </graphic>
+        </ToggleButton>
+        <ToggleButton fx:id="signUpButton" text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+          <graphic>
+            <FontIcon iconLiteral="bx-user-plus" />
+          </graphic>
+        </ToggleButton>
+      </VBox>
+      <!-- User Info Pane, shown when authenticated -->
+      <VBox fx:id="userInfoPane" spacing="5" visible="false" managed="false" style="-fx-padding: 10; -fx-alignment: center-left;">
+        <Label fx:id="usernameLabel" style="-fx-font-weight: bold;" wrapText="true" maxWidth="130" />
+        <Label fx:id="roleLabel" wrapText="true" maxWidth="130" />
+        <Label fx:id="emailLabel" wrapText="true" maxWidth="130" />
+        <Hyperlink fx:id="logoutLink" text="Вийти" onAction="#handleLogout" />
+      </VBox>
     </VBox>
   </left>
   <center>

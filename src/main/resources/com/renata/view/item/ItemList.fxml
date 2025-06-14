@@ -75,7 +75,7 @@
               <FontIcon iconLiteral="bx-refresh" iconSize="16" />
             </graphic>
           </Button>
-          <Button fx:id="addNewButton" text="Додати новий" onAction="#onAddNew">
+          <Button fx:id="addNewButton" text="Додати" onAction="#onAddNew">
             <graphic>
               <FontIcon iconLiteral="bx-plus" iconSize="16" />
             </graphic>
@@ -86,7 +86,7 @@
       <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="nameColumn" text="Назва" />
-          <TableColumn fx:id="typeColumn" text="Тип" prefWidth="30"/>
+          <TableColumn fx:id="typeColumn" text="Доступність" prefWidth="30"/>
         </columns>
       </TableView>
     </VBox>
