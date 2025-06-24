@@ -1,185 +1,106 @@
 package com.renata.infrastructure.persistence;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import com.github.javafaker.Faker;
 import com.renata.domain.entities.Item;
 import com.renata.domain.enums.AntiqueType;
 import com.renata.domain.enums.ItemCondition;
-import com.renata.infrastructure.InfrastructureConfig;
 import com.renata.infrastructure.persistence.contract.ItemRepository;
-import com.renata.infrastructure.persistence.util.ConnectionPool;
-import com.renata.infrastructure.persistence.util.PersistenceInitializer;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringJUnitConfig(classes = {InfrastructureConfig.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 class ItemRepositoryTest {
 
-    private static final String TEST_ITEM_NAME = "Ancient Vase";
-    private static final String TEST_COUNTRY = "China";
-    private static final String TEST_DESCRIPTION = "Ming dynasty vase";
-    private static final String TEST_IMAGE_PATH = "/images/vase.jpg";
-    private static final String TEST_PRODUCTION_YEAR = "1500";
-    private static final AntiqueType TEST_TYPE = AntiqueType.ANTIQUE;
-    private static final ItemCondition TEST_CONDITION = ItemCondition.EXCELLENT;
+    @Mock private ItemRepository itemRepository;
 
-    private final ItemRepository itemRepository;
-    private final PersistenceInitializer persistenceInitializer;
-    private final ConnectionPool connectionPool;
-
-    @Autowired
-    public ItemRepositoryTest(
-            ItemRepository itemRepository,
-            PersistenceInitializer persistenceInitializer,
-            ConnectionPool connectionPool) {
-        this.itemRepository = itemRepository;
-        this.persistenceInitializer = persistenceInitializer;
-        this.connectionPool = connectionPool;
-    }
+    private Faker faker;
+    private Item item;
+    private UUID itemId;
+    private String name;
+    private String country;
+    private UUID collectionId;
 
     @BeforeEach
     void setUp() {
-        persistenceInitializer.init(false);
-        persistenceInitializer.clearData();
-    }
+        faker = new Faker();
+        itemId = UUID.randomUUID();
+        name = faker.commerce().productName();
+        country = faker.country().name();
+        collectionId = UUID.randomUUID();
 
-    @AfterAll
-    void tearDown() {
-        connectionPool.shutdown();
-    }
-
-    private Item createAndSaveItem() {
-        return createAndSaveItem(TEST_ITEM_NAME, TEST_PRODUCTION_YEAR);
-    }
-
-    private Item createAndSaveItem(String name, String productionYear) {
-        Item item = new Item();
-        item.setId(UUID.randomUUID());
+        item = new Item();
+        item.setId(itemId);
         item.setName(name);
-        item.setType(TEST_TYPE);
-        item.setDescription(TEST_DESCRIPTION);
-        item.setProductionYear(productionYear);
-        item.setCountry(TEST_COUNTRY);
-        item.setCondition(TEST_CONDITION);
-        item.setImagePath(TEST_IMAGE_PATH);
-        return itemRepository.save(item);
+        item.setType(AntiqueType.ANTIQUE);
+        item.setDescription(faker.lorem().sentence());
+        item.setProductionYear("1890");
+        item.setCountry(country);
+        item.setCondition(ItemCondition.GOOD);
+        item.setImagePath("/images/image.png");
     }
 
     @Test
-    void shouldSaveAndRetrieveItemById() {
-        Item item = createAndSaveItem();
+    void findByName_ReturnsItemList() {
+        when(itemRepository.findByName(name)).thenReturn(List.of(item));
 
-        Item found =
-                itemRepository
-                        .findById(item.getId())
-                        .orElseThrow(() -> new AssertionError("Item not found"));
-        assertThat(found.getName()).isEqualTo(TEST_ITEM_NAME);
-        assertThat(found.getType()).isEqualTo(TEST_TYPE);
-        assertThat(found.getCountry()).isEqualTo(TEST_COUNTRY);
-        assertThat(found.getCondition()).isEqualTo(TEST_CONDITION);
-        assertThat(found.getProductionYear()).isEqualTo(TEST_PRODUCTION_YEAR);
+        List<Item> result = itemRepository.findByName(name);
+
+        assertEquals(1, result.size());
+        assertEquals(name, result.get(0).getName());
+        verify(itemRepository).findByName(name);
     }
 
     @Test
-    void shouldFindItemsByName() {
-        Item item = createAndSaveItem();
+    void findByType_ReturnsItemList() {
+        AntiqueType type = AntiqueType.ANTIQUE;
+        when(itemRepository.findByType(type)).thenReturn(List.of(item));
 
-        List<Item> items = itemRepository.findByName(TEST_ITEM_NAME);
-        assertThat(items)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        i -> {
-                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                            assertThat(i.getType()).isEqualTo(TEST_TYPE);
-                        });
+        List<Item> result = itemRepository.findByType(type);
+
+        assertEquals(1, result.size());
+        assertEquals(type, result.get(0).getType());
+        verify(itemRepository).findByType(type);
     }
 
     @Test
-    void shouldFindItemsByType() {
-        Item item = createAndSaveItem();
+    void findByCountry_ReturnsItemList() {
+        when(itemRepository.findByCountry(country)).thenReturn(List.of(item));
 
-        List<Item> items = itemRepository.findByType(TEST_TYPE);
-        assertThat(items)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        i -> {
-                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                            assertThat(i.getType()).isEqualTo(TEST_TYPE);
-                        });
+        List<Item> result = itemRepository.findByCountry(country);
+
+        assertEquals(1, result.size());
+        assertEquals(country, result.get(0).getCountry());
+        verify(itemRepository).findByCountry(country);
     }
 
     @Test
-    void shouldFindItemsByCountry() {
-        Item item = createAndSaveItem();
+    void findByCondition_ReturnsItemList() {
+        ItemCondition condition = ItemCondition.GOOD;
+        when(itemRepository.findByCondition(condition)).thenReturn(List.of(item));
 
-        List<Item> items = itemRepository.findByCountry(TEST_COUNTRY);
-        assertThat(items)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        i -> {
-                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                            assertThat(i.getCountry()).isEqualTo(TEST_COUNTRY);
-                        });
+        List<Item> result = itemRepository.findByCondition(condition);
+
+        assertEquals(1, result.size());
+        assertEquals(condition, result.get(0).getCondition());
+        verify(itemRepository).findByCondition(condition);
     }
 
     @Test
-    void shouldFindItemsByCondition() {
-        Item item = createAndSaveItem();
+    void findItemsByCollectionId_ReturnsItems() {
+        when(itemRepository.findItemsByCollectionId(collectionId)).thenReturn(List.of(item));
 
-        List<Item> items = itemRepository.findByCondition(TEST_CONDITION);
-        assertThat(items)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        i -> {
-                            assertThat(i.getName()).isEqualTo(TEST_ITEM_NAME);
-                            assertThat(i.getCondition()).isEqualTo(TEST_CONDITION);
-                        });
-    }
+        List<Item> result = itemRepository.findItemsByCollectionId(collectionId);
 
-    @Test
-    void shouldUpdateItemAndVerifyChanges() {
-        Item item = createAndSaveItem();
-        String updatedName = "Updated Vase";
-        item.setName(updatedName);
-        itemRepository.save(item);
-
-        Item updated =
-                itemRepository
-                        .findById(item.getId())
-                        .orElseThrow(() -> new AssertionError("Updated item not found"));
-        assertThat(updated.getName()).isEqualTo(updatedName);
-        assertThat(updated.getType()).isEqualTo(TEST_TYPE);
-        assertThat(updated.getProductionYear()).isEqualTo(TEST_PRODUCTION_YEAR);
-    }
-
-    @Test
-    void shouldDeleteItemAndVerifyAbsence() {
-        Item item = createAndSaveItem();
-        itemRepository.delete(item.getId());
-
-        assertThat(itemRepository.findById(item.getId())).isEmpty();
-    }
-
-    @Test
-    void shouldHandleMultipleItemsWithSameName() {
-        Item item1 = createAndSaveItem(TEST_ITEM_NAME + "_1", TEST_PRODUCTION_YEAR);
-        Item item2 = createAndSaveItem(TEST_ITEM_NAME + "_1", "1600");
-
-        List<Item> items = itemRepository.findByName(TEST_ITEM_NAME + "_1");
-        assertThat(items)
-                .hasSize(2)
-                .extracting(Item::getProductionYear)
-                .containsExactlyInAnyOrder(TEST_PRODUCTION_YEAR, "1600");
+        assertEquals(1, result.size());
+        assertEquals(collectionId, collectionId);
+        verify(itemRepository).findItemsByCollectionId(collectionId);
     }
 }

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/** Реалізація сервісу для роботи з користувачами системи. */
 @Service
 final class UserServiceImpl implements UserService {
 

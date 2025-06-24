@@ -1,7 +1,6 @@
 package com.renata.infrastructure.persistence.contract;
 
 import com.renata.domain.entities.Collection;
-import com.renata.domain.entities.Item;
 import com.renata.infrastructure.persistence.Repository;
 import java.util.List;
 import java.util.UUID;
@@ -16,14 +15,6 @@ public interface CollectionRepository extends Repository<Collection, UUID> {
      * @return список колекцій
      */
     List<Collection> findByUserId(UUID userId);
-
-    /**
-     * Пошук антикваріату у колекції за ідентифікатором колекції.
-     *
-     * @param collectionId ідентифікатор колекції
-     * @return список антикваріату
-     */
-    List<Item> findItemsByCollectionId(UUID collectionId);
 
     /**
      * Пошук колекцій за ідентифікатором антикваріату.

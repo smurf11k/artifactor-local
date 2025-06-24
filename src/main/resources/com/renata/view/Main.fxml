@@ -10,46 +10,47 @@
     <ToggleGroup fx:id="toggleGroup" />
   </fx:define>
   <left>
-    <VBox fx:id="menuPane" spacing="10" styleClass="menu" style="-fx-padding: 20;">
-      <!-- Permanent Menu Buttons -->
-      <ToggleButton text="Антикваріат" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+    <VBox fx:id="menuPane" spacing="10" styleClass="menu">
+      <ToggleButton text="Антикваріат" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" styleClass="left-aligned-toggle">
         <graphic>
           <FontIcon iconLiteral="bx-list-ul" />
         </graphic>
       </ToggleButton>
-      <ToggleButton text="Транзакції" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+      <ToggleButton text="Транзакції" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" styleClass="left-aligned-toggle">
         <graphic>
           <FontIcon iconLiteral="bx-transfer" />
         </graphic>
       </ToggleButton>
-      <ToggleButton text="Колекції" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+      <ToggleButton text="Колекції" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" styleClass="left-aligned-toggle">
         <graphic>
           <FontIcon iconLiteral="bx-collection" />
         </graphic>
       </ToggleButton>
-      <ToggleButton text="Ринок" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+      <ToggleButton text="Ринок" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" styleClass="left-aligned-toggle">
         <graphic>
-          <FontIcon iconLiteral="bx-dollar" />
+          <FontIcon iconLiteral="bx-dollar-circle" />
         </graphic>
       </ToggleButton>
-      <!-- Spacer to push auth buttons and user info to the bottom -->
+      <ToggleButton fx:id="themeToggle" text="Зміна теми" onAction="#handleThemeToggle" prefWidth="130" styleClass="left-aligned-toggle">
+      <graphic>
+        <FontIcon iconLiteral="bx-adjust" />
+      </graphic>
+    </ToggleButton>
       <VBox VBox.vgrow="ALWAYS" />
-      <!-- Auth Buttons, shown when not authenticated -->
       <VBox fx:id="menuButtonsPane" spacing="10">
-        <ToggleButton fx:id="signInButton" text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+        <ToggleButton fx:id="signInButton" text="Авторизація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" styleClass="left-aligned-toggle">
           <graphic>
             <FontIcon iconLiteral="bx-door-open" />
           </graphic>
         </ToggleButton>
-        <ToggleButton fx:id="signUpButton" text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" alignment="BASELINE_LEFT">
+        <ToggleButton fx:id="signUpButton" text="Реєстрація" toggleGroup="$toggleGroup" onAction="#handleMenuSelection" prefWidth="130" styleClass="left-aligned-toggle">
           <graphic>
             <FontIcon iconLiteral="bx-user-plus" />
           </graphic>
         </ToggleButton>
       </VBox>
-      <!-- User Info Pane, shown when authenticated -->
-      <VBox fx:id="userInfoPane" spacing="5" visible="false" managed="false" style="-fx-padding: 10; -fx-alignment: center-left;">
-        <Label fx:id="usernameLabel" style="-fx-font-weight: bold;" wrapText="true" maxWidth="130" />
+      <VBox fx:id="userInfoPane" spacing="5" visible="false" managed="false" styleClass="userInfoPane">
+        <Label fx:id="usernameLabel" styleClass="boldText" wrapText="true" maxWidth="130" />
         <Label fx:id="roleLabel" wrapText="true" maxWidth="130" />
         <Label fx:id="emailLabel" wrapText="true" maxWidth="130" />
         <Hyperlink fx:id="logoutLink" text="Вийти" onAction="#handleLogout" />

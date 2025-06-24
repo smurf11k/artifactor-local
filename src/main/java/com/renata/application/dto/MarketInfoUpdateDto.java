@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record MarketInfoUpdateDto(
-        @NotNull(message = "can't be null") UUID id,
-        @NotNull(message = "can't be null") double price,
-        @NotNull(message = "can't be null") UUID itemId,
-        @NotNull(message = "can't be null") LocalDateTime timestamp,
-        @NotNull(message = "can't be null") MarketEventType type) {}
+        @NotNull(message = "ID мусить бути встановленим") UUID id,
+        @NotNull(message = "Ціна мусить бути встановлена") double price,
+        @NotNull(message = "ID предмету мусить бути встановленим") UUID itemId,
+        @NotNull(message = "Час мусить бути встановлений") LocalDateTime timestamp,
+        @NotNull(message = "Тип мусить бути встановлений") MarketEventType type) {}

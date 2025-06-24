@@ -287,7 +287,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
     public T update(ID id, T entity) {
         String sql = buildUpdateSql();
         List<Object> values = extractEntityValues(entity, false);
-        values.add(id); // Add id for WHERE clause
+        values.add(id);
         executeUpdate(sql, values);
         return entity;
     }
@@ -476,17 +476,15 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
         List<Object> values = new ArrayList<>();
         for (Field field : entityClass.getDeclaredFields()) {
             if (!includeId && field.getName().equals("id")) {
-                continue; // Skip id field if includeId is false
+                continue;
             }
             field.setAccessible(true);
             try {
                 Object value = field.get(entity);
                 if (value != null) {
                     if (field.getType().isEnum()) {
-                        // Конвертуємо енам у рядок
                         value = ((Enum<?>) value).name();
                     } else if (field.getType() == LocalDateTime.class) {
-                        // Конвертуємо LocalDateTime у Timestamp
                         value = Timestamp.valueOf((LocalDateTime) value);
                     }
                 }
@@ -505,7 +503,7 @@ public abstract class GenericRepository<T, ID> implements Repository<T, ID> {
      * @return список значень полів
      */
     protected List<Object> extractEntityValues(T entity) {
-        return extractEntityValues(entity, true); // Default to including id
+        return extractEntityValues(entity, true);
     }
 
     /**

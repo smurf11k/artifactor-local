@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.*;
 
+/** Сутність що представляє ринкову інформацію предметів антикваріату. */
 @Getter
 @Setter
 @NoArgsConstructor

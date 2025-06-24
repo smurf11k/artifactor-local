@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record TransactionUpdateDto(
-        @NotNull(message = "can't be null") UUID id,
-        @NotNull(message = "can't be null") TransactionType type,
-        @NotNull(message = "can't be null") UUID userId,
-        @NotNull(message = "can't be null") UUID itemId,
-        @NotNull(message = "can't be null") LocalDateTime timestamp) {}
+        @NotNull(message = "ID мусить бути встановленим") UUID id,
+        @NotNull(message = "ID користувача мусить бути встановленим") UUID userId,
+        @NotNull(message = "ID предмету мусить бути встановленим") UUID itemId,
+        @NotNull(message = "Тип мусить бути встановленим") TransactionType type,
+        @NotNull(message = "Дата мусить бути встановлена") LocalDateTime timestamp) {}

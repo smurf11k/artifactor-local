@@ -6,14 +6,14 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <?import javafx.scene.image.ImageView?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.item.ItemListController" styleClass="root" spacing="10" alignment="TOP_CENTER">
-  <HBox alignment="TOP_LEFT" VBox.vgrow="ALWAYS">
-    <!-- Left: Item Details with ScrollPane -->
-    <ScrollPane fitToWidth="true" pannable="true" prefWidth="300">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.item.ItemListController" spacing="10" alignment="TOP_CENTER">
+  <HBox VBox.vgrow="ALWAYS">
+    <!-- Деталі предмету -->
+    <ScrollPane fitToWidth="true" pannable="true" prefWidth="330">
       <content>
-        <VBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 10;">
-          <ImageView fx:id="itemImage" fitWidth="270" fitHeight="270" preserveRatio="true" smooth="true" />
-          <Label fx:id="nameLabel" text="Назва: " wrapText="true" style="-fx-font-weight: bold;" maxWidth="280" />
+        <VBox spacing="10" styleClass="smallPadding">
+          <ImageView fx:id="itemImage" fitWidth="300" fitHeight="300" preserveRatio="true"/>
+          <Label fx:id="nameLabel" text="Назва: " wrapText="true" styleClass="boldText" maxWidth="280" />
           <Label fx:id="countryLabel" text="Країна: " wrapText="true" maxWidth="280" />
           <Label fx:id="productionYearLabel" text="Рік виготовлення: " wrapText="true" maxWidth="280" />
           <Label fx:id="typeLabel" text="Тип: " wrapText="true" maxWidth="280" />
@@ -25,7 +25,7 @@
               <Insets bottom="10" />
             </VBox.margin>
           </Label>
-          <HBox spacing="20" alignment="TOP_LEFT">
+          <HBox spacing="20">
             <Button fx:id="editButton" text="Редагувати" onAction="#handleEdit" disable="true" styleClass="accent">
               <graphic>
                 <FontIcon iconLiteral="bx-pencil" iconSize="16" />
@@ -36,20 +36,24 @@
                 <FontIcon iconLiteral="bx-trash" iconSize="16" />
               </graphic>
             </Button>
+            <Button fx:id="organizeButton" onAction="#handleOrganize" disable="true" styleClass="primary">
+              <graphic>
+                <FontIcon iconLiteral="bx-folder" iconSize="16" />
+              </graphic>
+            </Button>
           </HBox>
         </VBox>
       </content>
     </ScrollPane>
-    <!-- Vertical Divider -->
+    <!-- Роздільник -->
     <Separator orientation="VERTICAL">
       <VBox.vgrow>ALWAYS</VBox.vgrow>
     </Separator>
-    <!-- Right: Filters and Item List -->
-    <VBox spacing="10" alignment="TOP_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10;">
-      <!-- Filters -->
-      <GridPane hgap="10" vgap="10" alignment="TOP_LEFT">
+    <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="smallPadding">
+      <!-- Фільтри -->
+      <GridPane hgap="10" vgap="10">
         <padding>
-          <Insets top="0" right="10" bottom="10" left="0" />
+          <Insets right="10" bottom="10"/>
         </padding>
         <Label text="Пошук за назвою:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
         <TextField fx:id="searchField" promptText="Впишіть назву предмету" onAction="#applySearchAndFilters" GridPane.rowIndex="0" GridPane.columnIndex="1" />
@@ -59,7 +63,7 @@
         <TextField fx:id="countryFilter" promptText="Впишіть країну" onAction="#applySearchAndFilters" GridPane.rowIndex="1" GridPane.columnIndex="1" />
         <Label text="Стан:" GridPane.rowIndex="1" GridPane.columnIndex="2" />
         <ComboBox fx:id="conditionFilter" GridPane.rowIndex="1" GridPane.columnIndex="3" prefWidth="150"/>
-        <HBox spacing="10" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="4" alignment="TOP_LEFT">
+        <HBox spacing="10" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="4">
           <Button fx:id="applyFilterButton" text="Застосувати" onAction="#applySearchAndFilters">
             <graphic>
               <FontIcon iconLiteral="bx-filter" iconSize="16" />
@@ -82,11 +86,12 @@
           </Button>
         </HBox>
       </GridPane>
-      <!-- Item List -->
+      <!-- Список предметів -->
       <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
         <columns>
-          <TableColumn fx:id="nameColumn" text="Назва" />
-          <TableColumn fx:id="typeColumn" text="Доступність" prefWidth="30"/>
+          <TableColumn fx:id="nameColumn" text="Назва" prefWidth="300"/>
+          <TableColumn fx:id="typeColumn" text="Доступність" prefWidth="100"/>
+          <TableColumn fx:id="actionColumn" text="Продати" prefWidth="50" />
         </columns>
       </TableView>
     </VBox>

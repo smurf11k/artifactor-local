@@ -2,10 +2,13 @@ package com.renata.presentation.controller;
 
 import static com.renata.presentation.Runner.springContext;
 
+import atlantafx.base.theme.PrimerDark;
+import atlantafx.base.theme.PrimerLight;
 import com.renata.application.contract.AuthService;
 import com.renata.application.exception.AuthException;
 import com.renata.domain.entities.User;
 import com.renata.presentation.Runner;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.util.SpringFXMLLoader;
 import java.io.IOException;
 import javafx.event.ActionEvent;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MainController {
 
+    private final MessageManager messageManager;
     @FXML private ToggleGroup toggleGroup = new ToggleGroup();
     @FXML private BorderPane root;
     @FXML private VBox menuPane;
@@ -35,11 +39,13 @@ public class MainController {
     @FXML private ToggleButton signInButton;
     @FXML private ToggleButton signUpButton;
     @FXML private Hyperlink logoutLink;
+    @FXML private ToggleButton themeToggle;
 
     private final AuthService authenticationService;
 
-    public MainController(AuthService authenticationService) {
+    public MainController(AuthService authenticationService, MessageManager messageManager) {
         this.authenticationService = authenticationService;
+        this.messageManager = messageManager;
     }
 
     @FXML
@@ -48,12 +54,21 @@ public class MainController {
         updateMenuVisibility();
     }
 
-    // TODO: add role protection to every page except sign in and sign up
     @FXML
     private void handleMenuSelection(ActionEvent actionEvent) {
         ToggleButton selectedButton = (ToggleButton) toggleGroup.getSelectedToggle();
         if (selectedButton != null) {
-            switch (selectedButton.getText()) {
+            String selectedText = selectedButton.getText();
+            if (selectedText.equals("Антикваріат") && !authenticationService.isAuthenticated()) {
+                messageManager.showErrorAlert(
+                        "Помилка доступу",
+                        "Помилка",
+                        "Ви повинні увійти в систему, щоб переглянути сторінку Антикваріату.");
+                signInButton.setSelected(true);
+                switchPage("/com/renata/view/user/SignIn.fxml");
+                return;
+            }
+            switch (selectedText) {
                 case "Авторизація" -> switchPage("/com/renata/view/user/SignIn.fxml");
                 case "Реєстрація" -> switchPage("/com/renata/view/user/SignUp.fxml");
                 case "Антикваріат" -> switchPage("/com/renata/view/item/ItemList.fxml");
@@ -61,9 +76,7 @@ public class MainController {
                         switchPage("/com/renata/view/transaction/TransactionList.fxml");
                 case "Колекції" -> switchPage("/com/renata/view/collection/CollectionList.fxml");
                 case "Ринок" -> switchPage("/com/renata/view/market/Market.fxml");
-                default ->
-                        System.err.println(
-                                String.format("Unknown selection: %s", selectedButton.getText()));
+                default -> System.err.println(String.format("Невідомий вибір: %s", selectedText));
             }
         }
     }
@@ -92,6 +105,22 @@ public class MainController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void handleThemeToggle(ActionEvent event) {
+        var scene = root.getScene();
+        if (scene == null) return;
+
+        scene.getStylesheets().clear();
+
+        if (themeToggle.isSelected()) {
+            scene.getStylesheets().add(new PrimerDark().getUserAgentStylesheet());
+        } else {
+            scene.getStylesheets().add(new PrimerLight().getUserAgentStylesheet());
+        }
+
+        scene.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
     }
 
     public void handleItemListSelection() {

@@ -5,6 +5,7 @@ import com.renata.application.dto.TransactionUpdateDto;
 import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.Transaction;
 import com.renata.domain.enums.TransactionType;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.viewmodel.TransactionViewModel;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -13,12 +14,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ public class TransactionController {
 
     @Autowired private TransactionService transactionService;
     @Autowired private Validator validator;
+    @Autowired private MessageManager messageManager;
 
     @FXML private Label idLabel;
     @FXML private TextField userIdField;
@@ -37,6 +40,7 @@ public class TransactionController {
     @FXML private TextField timestampField;
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
+    @FXML public HBox buttonBox;
 
     private TransactionViewModel transactionViewModel;
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
@@ -114,63 +118,37 @@ public class TransactionController {
     @FXML
     private void onSave() {
         try {
-            if (transactionViewModel.userIdProperty().get() == null) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "ID користувача не може бути порожнім",
-                        "Введіть коректний UUID для користувача.");
-                return;
-            }
-            if (transactionViewModel.itemIdProperty().get() == null) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "ID предмета не може бути порожнім",
-                        "Введіть коректний UUID для предмета.");
-                return;
-            }
-            if (transactionViewModel.timestampProperty().get() == null) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "Невірний формат часу",
-                        "Введіть час у форматі yyyy-MM-dd HH:mm:ss.");
-                return;
-            }
-            if (transactionViewModel.typeProperty().get() == null) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "Тип транзакції не може бути порожнім",
-                        "Виберіть тип транзакції.");
-                return;
-            }
-
             TransactionUpdateDto transactionUpdateDto =
                     new TransactionUpdateDto(
                             transactionViewModel.idProperty().get(),
-                            transactionViewModel.typeProperty().get(),
                             transactionViewModel.userIdProperty().get(),
                             transactionViewModel.itemIdProperty().get(),
+                            transactionViewModel.typeProperty().get(),
                             transactionViewModel.timestampProperty().get());
 
             Set<ConstraintViolation<TransactionUpdateDto>> violations =
                     validator.validate(transactionUpdateDto);
             if (!violations.isEmpty()) {
-                throw ValidationException.create("transaction update", violations);
+                throw ValidationException.create("transacrion update", violations);
             }
 
-            transactionService.update(transactionUpdateDto.id(), transactionUpdateDto);
+            transactionService.update(transactionUpdateDto);
 
             Stage stage = (Stage) cancelButton.getScene().getWindow();
             stage.close();
 
-            showInfoAlert("Успіх", "Транзакцію успішно оновлено", transactionViewModel.toString());
+            messageManager.showInfoAlert(
+                    "Успіх", "Транзакцію успішно оновлено", transactionViewModel.toString());
 
         } catch (ValidationException e) {
-            showErrorAlert(
-                    "Помилка валідації",
-                    "Неправильні введені дані",
-                    String.join("; ", e.getMessage()));
+            String errorMessages =
+                    e.getViolations().stream()
+                            .map(ConstraintViolation::getMessage)
+                            .collect(Collectors.joining("; "));
+            messageManager.showErrorAlert(
+                    "Помилка валідації", "Неправильні введені дані", errorMessages);
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Помилка", "Не вийшло зберегти транзакцію", "Помилка: " + e.getMessage());
         }
     }
@@ -179,21 +157,5 @@ public class TransactionController {
     private void onCancel() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
-    }
-
-    private void showInfoAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void showErrorAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 }

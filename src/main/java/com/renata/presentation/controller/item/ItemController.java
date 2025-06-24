@@ -3,9 +3,11 @@ package com.renata.presentation.controller.item;
 import com.renata.application.contract.ItemService;
 import com.renata.application.dto.ItemStoreDto;
 import com.renata.application.dto.ItemUpdateDto;
+import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.Item;
 import com.renata.domain.enums.AntiqueType;
 import com.renata.domain.enums.ItemCondition;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.viewmodel.ItemViewModel;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -18,7 +20,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -38,6 +39,7 @@ public class ItemController {
     @Autowired private ItemService itemService;
     @Autowired private ApplicationContext context;
     @Autowired private Validator validator;
+    @Autowired private MessageManager messageManager;
 
     @FXML private Label idLabel;
     @FXML private TextField nameField;
@@ -146,21 +148,15 @@ public class ItemController {
                 Set<ConstraintViolation<ItemUpdateDto>> violations =
                         validator.validate(itemUpdateDto);
                 if (!violations.isEmpty()) {
-                    String errorMessage =
-                            violations.stream()
-                                    .map(ConstraintViolation::getMessage)
-                                    .collect(Collectors.joining("; "));
-                    showErrorAlert("Помилка валідації", "Неправильні введені дані", errorMessage);
-                    return;
+                    throw ValidationException.create("item update", violations);
                 }
 
                 if (selectedImageFile != null) {
                     try (FileInputStream imageStream = new FileInputStream(selectedImageFile)) {
-                        itemService.update(
-                                itemViewModel.getId().get(), itemUpdateDto, imageStream, imageName);
+                        itemService.update(itemUpdateDto, imageStream, imageName);
                     }
                 } else {
-                    itemService.update(itemViewModel.getId().get(), itemUpdateDto, null, null);
+                    itemService.update(itemUpdateDto, null, null);
                 }
             } else {
                 ItemStoreDto itemStoreDto =
@@ -176,12 +172,7 @@ public class ItemController {
                 Set<ConstraintViolation<ItemStoreDto>> violations =
                         validator.validate(itemStoreDto);
                 if (!violations.isEmpty()) {
-                    String errorMessage =
-                            violations.stream()
-                                    .map(ConstraintViolation::getMessage)
-                                    .collect(Collectors.joining("; "));
-                    showErrorAlert("Помилка валідації", "Неправильні введені дані", errorMessage);
-                    return;
+                    throw ValidationException.create("item creation", violations);
                 }
 
                 if (selectedImageFile != null) {
@@ -196,13 +187,20 @@ public class ItemController {
             Stage stage = (Stage) cancelButton.getScene().getWindow();
             stage.close();
 
-            showInfoAlert(
+            messageManager.showInfoAlert(
                     "Успіх",
                     isEditMode ? "Предмет успішно оновлено" : "Предмет успішно збережено",
                     itemViewModel.toString());
 
+        } catch (ValidationException e) {
+            String errorMessages =
+                    e.getViolations().stream()
+                            .map(ConstraintViolation::getMessage)
+                            .collect(Collectors.joining("; "));
+            messageManager.showErrorAlert(
+                    "Помилка валідації", "Неправильні введені дані", errorMessages);
         } catch (IOException e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Помилка",
                     "Не вийшло зберегти предмет",
                     "Помилка із зображенням предмету: " + e.getMessage());
@@ -213,21 +211,5 @@ public class ItemController {
     private void onCancel() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
-    }
-
-    private void showInfoAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void showErrorAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 }

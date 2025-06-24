@@ -16,43 +16,20 @@ import org.springframework.stereotype.Repository;
 @Repository
 final class UserRepositoryImpl extends GenericRepository<User, UUID> implements UserRepository {
 
-    /**
-     * Конструктор репозиторію.
-     *
-     * @param connectionPool пул з'єднань до бази даних
-     */
     public UserRepositoryImpl(ConnectionPool connectionPool) {
         super(connectionPool, User.class, "users");
     }
 
-    /**
-     * Пошук користувача за ім’ям користувача.
-     *
-     * @param username ім’я користувача
-     * @return список користувачів
-     */
     @Override
     public List<User> findByUsername(String username) {
         return findByField("username", username);
     }
 
-    /**
-     * Пошук користувача за електронною поштою.
-     *
-     * @param email електронна пошта
-     * @return список користувачів
-     */
     @Override
     public List<User> findByEmail(String email) {
         return findByField("email", email);
     }
 
-    /**
-     * Пошук колекцій за ідентифікатором користувача.
-     *
-     * @param userId ідентифікатор користувача
-     * @return список колекцій
-     */
     @Override
     public List<Collection> findCollectionsByUserId(UUID userId) {
         String baseSql = "SELECT * FROM collections WHERE user_id = ? ORDER BY created_at";
@@ -60,12 +37,6 @@ final class UserRepositoryImpl extends GenericRepository<User, UUID> implements 
                 baseSql, stmt -> stmt.setObject(1, userId), this::mapResultSetToCollection);
     }
 
-    /**
-     * Пошук користувачів за частковою відповідністю імені.
-     *
-     * @param partialUsername часткове ім’я користувача
-     * @return список користувачів
-     */
     @Override
     public List<User> findByPartialUsername(String partialUsername) {
         return findAll(
@@ -79,12 +50,6 @@ final class UserRepositoryImpl extends GenericRepository<User, UUID> implements 
                 Integer.MAX_VALUE);
     }
 
-    /**
-     * Підрахунок колекцій користувача.
-     *
-     * @param userId ідентифікатор користувача
-     * @return кількість колекцій
-     */
     @Override
     public long countCollectionsByUserId(UUID userId) {
         Filter filter =
@@ -95,12 +60,6 @@ final class UserRepositoryImpl extends GenericRepository<User, UUID> implements 
         return count(filter, "collections");
     }
 
-    /**
-     * Перевірка існування користувача за ім’ям.
-     *
-     * @param username ім’я користувача
-     * @return true, якщо користувач існує
-     */
     @Override
     public boolean existsByUsername(String username) {
         Filter filter =
@@ -111,12 +70,6 @@ final class UserRepositoryImpl extends GenericRepository<User, UUID> implements 
         return count(filter) > 0;
     }
 
-    /**
-     * Перевірка існування користувача за електронною поштою.
-     *
-     * @param email електронна пошта
-     * @return true, якщо користувач існує
-     */
     @Override
     public boolean existsByEmail(String email) {
         Filter filter =
@@ -127,12 +80,6 @@ final class UserRepositoryImpl extends GenericRepository<User, UUID> implements 
         return count(filter) > 0;
     }
 
-    /**
-     * Зіставлення ResultSet у колекцію.
-     *
-     * @param rs результат запиту
-     * @return колекція
-     */
     private Collection mapResultSetToCollection(ResultSet rs) {
         try {
             Collection collection = new Collection();

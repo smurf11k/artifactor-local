@@ -9,7 +9,7 @@
 
 <GridPane xmlns:fx="http://javafx.com/fxml/1"
   fx:controller="com.renata.presentation.controller.transaction.TransactionController"
-  alignment="CENTER" hgap="10" vgap="10" style="-fx-padding: 20;">
+  alignment="CENTER" hgap="10" vgap="10" styleClass="mediumPadding">
 
   <Label text="ID транзакції:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
   <Label fx:id="idLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
@@ -30,5 +30,4 @@
     <Button fx:id="saveButton" text="Зберегти" onAction="#onSave" styleClass="success"/>
     <Button fx:id="cancelButton" text="Скасувати" onAction="#onCancel" styleClass="danger"/>
   </HBox>
-
 </GridPane>

@@ -1,10 +1,13 @@
 package com.renata.presentation.controller.collection;
 
+import com.renata.application.contract.AuthService;
 import com.renata.application.contract.CollectionService;
 import com.renata.application.dto.CollectionStoreDto;
 import com.renata.application.dto.CollectionUpdateDto;
+import com.renata.application.exception.AuthException;
 import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.Collection;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.viewmodel.CollectionViewModel;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -13,11 +16,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,6 +32,8 @@ public class CollectionController {
 
     @Autowired private CollectionService collectionService;
     @Autowired private Validator validator;
+    @Autowired private AuthService authService;
+    @Autowired private MessageManager messageManager;
 
     @FXML private Label idLabel;
     @FXML private TextField nameField;
@@ -35,6 +41,7 @@ public class CollectionController {
     @FXML private TextField createdAtField;
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
+    @FXML private HBox buttonBox;
 
     private CollectionViewModel collectionViewModel;
     private boolean isNewCollection = false;
@@ -43,21 +50,36 @@ public class CollectionController {
 
     @FXML
     public void initialize() {
-        // Initialize fields and set createdAtField editable based on context
+        userIdField.setEditable(false);
     }
 
     public void setNewCollection() {
         this.collectionViewModel = new CollectionViewModel(new Collection());
         this.isNewCollection = true;
         bindFieldsToViewModel();
-        createdAtField.setEditable(true); // Allow editing for new collections
+        createdAtField.setEditable(true);
+        setCurrentUserId();
     }
 
     public void setCollection(Collection collection) {
         this.collectionViewModel = new CollectionViewModel(collection);
         this.isNewCollection = false;
         bindFieldsToViewModel();
-        createdAtField.setEditable(false); // Read-only for editing existing collections
+        createdAtField.setEditable(false);
+        setCurrentUserId();
+    }
+
+    private void setCurrentUserId() {
+        try {
+            UUID userId = authService.getCurrentUser().getId();
+            collectionViewModel.userIdProperty().set(userId);
+            userIdField.setText(userId != null ? userId.toString() : "");
+        } catch (AuthException e) {
+            messageManager.showErrorAlert(
+                    "Помилка автентифікації",
+                    "Не вдалося отримати ID користувача",
+                    "Помилка: " + e.getMessage());
+        }
     }
 
     private void bindFieldsToViewModel() {
@@ -74,21 +96,6 @@ public class CollectionController {
                 collectionViewModel.nameProperty().get() != null
                         ? collectionViewModel.nameProperty().get()
                         : "");
-        userIdField
-                .textProperty()
-                .addListener(
-                        (observable, oldValue, newValue) -> {
-                            try {
-                                collectionViewModel
-                                        .userIdProperty()
-                                        .set(
-                                                newValue != null && !newValue.trim().isEmpty()
-                                                        ? UUID.fromString(newValue.trim())
-                                                        : null);
-                            } catch (IllegalArgumentException e) {
-                                collectionViewModel.userIdProperty().set(null);
-                            }
-                        });
         userIdField.setText(
                 collectionViewModel.userIdProperty().get() != null
                         ? collectionViewModel.userIdProperty().get().toString()
@@ -108,39 +115,17 @@ public class CollectionController {
         createdAtField.setText(
                 collectionViewModel.createdAtProperty().get() != null
                         ? collectionViewModel.createdAtProperty().get().format(DATE_TIME_FORMATTER)
-                        : "");
+                        : LocalDateTime.now().format(DATE_TIME_FORMATTER));
     }
 
     @FXML
     private void onSave() {
         try {
-            if (collectionViewModel.nameProperty().get() == null
-                    || collectionViewModel.nameProperty().get().trim().isEmpty()) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "Назва колекції не може бути порожньою",
-                        "Введіть коректну назву колекції.");
-                return;
-            }
-            if (collectionViewModel.userIdProperty().get() == null) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "ID користувача не може бути порожнім",
-                        "Введіть коректний UUID для користувача.");
-                return;
-            }
-            if (isNewCollection && collectionViewModel.createdAtProperty().get() == null) {
-                showErrorAlert(
-                        "Помилка валідації",
-                        "Невірний формат часу створення",
-                        "Введіть час у форматі yyyy-MM-dd HH:mm:ss.");
-                return;
-            }
-
             if (isNewCollection) {
-                // Create new collection
                 CollectionStoreDto collectionStoreDto =
-                        new CollectionStoreDto(collectionViewModel.nameProperty().get());
+                        new CollectionStoreDto(
+                                collectionViewModel.userIdProperty().get(),
+                                collectionViewModel.nameProperty().get());
                 Set<ConstraintViolation<CollectionStoreDto>> createViolations =
                         validator.validate(collectionStoreDto);
                 if (!createViolations.isEmpty()) {
@@ -148,7 +133,6 @@ public class CollectionController {
                 }
                 collectionService.create(collectionStoreDto);
             } else {
-                // Update existing collection
                 CollectionUpdateDto collectionUpdateDto =
                         new CollectionUpdateDto(
                                 collectionViewModel.idProperty().get(),
@@ -159,22 +143,25 @@ public class CollectionController {
                 if (!updateViolations.isEmpty()) {
                     throw ValidationException.create("collection update", updateViolations);
                 }
-                collectionService.update(
-                        collectionViewModel.idProperty().get(), collectionUpdateDto);
+                collectionService.update(collectionUpdateDto);
             }
 
             Stage stage = (Stage) cancelButton.getScene().getWindow();
             stage.close();
 
-            showInfoAlert("Успіх", "Колекцію успішно збережено", collectionViewModel.toString());
+            messageManager.showInfoAlert(
+                    "Успіх", "Колекцію успішно збережено", collectionViewModel.toString());
 
         } catch (ValidationException e) {
-            showErrorAlert(
-                    "Помилка валідації",
-                    "Неправильні введені дані",
-                    String.join("; ", e.getMessage()));
+            String errorMessages =
+                    e.getViolations().stream()
+                            .map(ConstraintViolation::getMessage)
+                            .collect(Collectors.joining("; "));
+            messageManager.showErrorAlert(
+                    "Помилка валідації", "Неправильні введені дані", errorMessages);
         } catch (Exception e) {
-            showErrorAlert("Помилка", "Не вийшло зберегти колекцію", "Помилка: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка", "Не вийшло зберегти колекцію", "Помилка: " + e.getMessage());
         }
     }
 
@@ -182,21 +169,5 @@ public class CollectionController {
     private void onCancel() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
-    }
-
-    private void showInfoAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void showErrorAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 }

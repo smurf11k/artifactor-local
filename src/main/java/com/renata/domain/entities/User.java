@@ -52,7 +52,7 @@ public class User implements Comparable<User> {
         GENERAL(
                 "general",
                 Map.of(
-                        EntityName.ITEM, new Permission(true, true, false, true),
+                        EntityName.ITEM, new Permission(false, false, false, true),
                         EntityName.COLLECTION, new Permission(true, true, true, true),
                         EntityName.TRANSACTION, new Permission(true, false, false, true),
                         EntityName.MARKET, new Permission(false, false, false, true),

@@ -42,13 +42,4 @@ public interface TransactionRepository extends Repository<Transaction, UUID> {
      * @return список транзакцій
      */
     List<Transaction> findByDateRange(LocalDateTime from, LocalDateTime to);
-
-    /**
-     * Пошук транзакцій за користувачем та типом.
-     *
-     * @param userId ідентифікатор користувача
-     * @param type тип транзакції
-     * @return список транзакцій
-     */
-    List<Transaction> findByUserAndType(UUID userId, TransactionType type);
 }

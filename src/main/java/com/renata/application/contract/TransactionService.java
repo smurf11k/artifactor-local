@@ -1,5 +1,6 @@
 package com.renata.application.contract;
 
+import com.renata.application.Reportable;
 import com.renata.application.dto.TransactionStoreDto;
 import com.renata.application.dto.TransactionUpdateDto;
 import com.renata.domain.entities.Transaction;
@@ -9,8 +10,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Інтерфейс для роботи з транзакціями антикваріату. */
-public interface TransactionService {
+/** Сервіс для роботи з транзакціями антикваріату. */
+public interface TransactionService extends Reportable<Transaction> {
     /**
      * Створює нову транзакцію.
      *
@@ -22,11 +23,10 @@ public interface TransactionService {
     /**
      * Оновлює існуючу транзакцію.
      *
-     * @param id ідентифікатор транзакції
      * @param transactionUpdateDto оновлені дані транзакції
      * @return оновлена транзакція
      */
-    Transaction update(UUID id, TransactionUpdateDto transactionUpdateDto);
+    Transaction update(TransactionUpdateDto transactionUpdateDto);
 
     /**
      * Видаляє транзакцію.
@@ -84,13 +84,4 @@ public interface TransactionService {
      * @return список транзакцій у вказаному діапазоні
      */
     List<Transaction> findByDateRange(LocalDateTime from, LocalDateTime to);
-
-    /**
-     * Фільтрує транзакції за користувачем та типом.
-     *
-     * @param userId ідентифікатор користувача
-     * @param type тип транзакції
-     * @return список транзакцій, що відповідають критеріям
-     */
-    List<Transaction> findByUserAndType(UUID userId, TransactionType type);
 }

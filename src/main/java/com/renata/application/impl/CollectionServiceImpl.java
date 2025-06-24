@@ -7,7 +7,8 @@ import com.renata.application.dto.CollectionUpdateDto;
 import com.renata.application.exception.AuthException;
 import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.Collection;
-import com.renata.domain.entities.Item;
+import com.renata.domain.entities.User;
+import com.renata.domain.entities.User.Role;
 import com.renata.infrastructure.persistence.PersistenceContext;
 import com.renata.infrastructure.persistence.contract.CollectionRepository;
 import com.renata.infrastructure.persistence.exception.DatabaseAccessException;
@@ -20,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/** Реалізація сервісу для управління колекціями антикваріату. */
 @Service
 final class CollectionServiceImpl implements CollectionService {
 
@@ -47,63 +49,48 @@ final class CollectionServiceImpl implements CollectionService {
             throw ValidationException.create("collection creation", violations);
         }
 
-        UUID userId;
-        try {
-            userId = authService.getCurrentUser().getId();
-            System.out.println("Authenticated userId: " + userId);
-        } catch (AuthException e) {
-            System.out.println("Failed to get current user: " + e.getMessage());
-            throw e;
-        }
-
-        if (userId == null) {
-            System.out.println("Error: userId is null after authentication");
-            throw new AuthException("Authenticated user has no ID");
-        }
-
         Collection collection = new Collection();
         collection.setId(UUID.randomUUID());
-        collection.setUserId(userId);
+        collection.setUserId(collectionStoreDto.userId());
         collection.setName(collectionStoreDto.name());
         collection.setCreatedAt(LocalDateTime.now());
 
-        System.out.println(
-                "Saving collection: id="
-                        + collection.getId()
-                        + ", userId="
-                        + collection.getUserId()
-                        + ", name="
-                        + collection.getName());
         persistenceContext.registerNew(collection);
         persistenceContext.commit();
-        System.out.println("Saved entity: " + collection + ", userId: " + collection.getUserId());
+        System.out.println(
+                "Збережено колекцію: " + collection + ", власник: " + collection.getUserId());
         return collection;
     }
 
     @Override
-    public Collection update(UUID id, CollectionUpdateDto collectionUpdateDto) {
+    public Collection update(CollectionUpdateDto collectionUpdateDto) {
         Set<jakarta.validation.ConstraintViolation<CollectionUpdateDto>> violations =
                 validator.validate(collectionUpdateDto);
         if (!violations.isEmpty()) {
             throw ValidationException.create("collection update", violations);
         }
 
-        UUID userId = authService.getCurrentUser().getId();
+        UUID dtoId = collectionUpdateDto.id();
+        User user = authService.getCurrentUser();
 
-        Optional<Collection> collectionOpt = collectionRepository.findById(id);
+        Optional<Collection> collectionOpt = collectionRepository.findById(dtoId);
         if (collectionOpt.isEmpty()) {
-            throw new DatabaseAccessException("Collection not found with id: " + id);
+            throw new DatabaseAccessException("Колекцію не знайдено з таким id: " + dtoId);
         }
         Collection collection = collectionOpt.get();
 
-        if (!collection.getUserId().equals(userId)) {
-            throw new AuthException("You are not authorized to update this collection");
+        boolean isOwner = collection.getUserId().equals(user.getId());
+        boolean isAdmin =
+                authService.hasPermission(Role.EntityName.COLLECTION, "update")
+                        && user.getRole() == Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new AuthException("У вас немає права на редагування цієї колекції.");
         }
 
         collection.setName(collectionUpdateDto.name());
-        collection.setUserId(collectionUpdateDto.userId());
 
-        persistenceContext.registerUpdated(id, collection);
+        persistenceContext.registerUpdated(dtoId, collection);
         persistenceContext.commit();
         return collection;
     }
@@ -111,14 +98,26 @@ final class CollectionServiceImpl implements CollectionService {
     @Override
     public void delete(UUID id) {
         Optional<Collection> collectionOpt = collectionRepository.findById(id);
-        if (collectionOpt.isPresent()) {
-            Collection collection = collectionOpt.get();
-
-            collectionRepository.clearCollection(id);
-
-            persistenceContext.registerDeleted(collection);
-            persistenceContext.commit();
+        if (collectionOpt.isEmpty()) {
+            return;
         }
+
+        Collection collection = collectionOpt.get();
+        User user = authService.getCurrentUser();
+
+        boolean isOwner = collection.getUserId().equals(user.getId());
+        boolean isAdmin =
+                authService.hasPermission(Role.EntityName.COLLECTION, "delete")
+                        && user.getRole() == Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new AuthException("У вас немає права на видалення цієї колекції.");
+        }
+
+        collectionRepository.clearCollection(id);
+
+        persistenceContext.registerDeleted(collection);
+        persistenceContext.commit();
     }
 
     @Override
@@ -134,11 +133,6 @@ final class CollectionServiceImpl implements CollectionService {
     @Override
     public List<Collection> findByUserId(UUID userId) {
         return collectionRepository.findByUserId(userId);
-    }
-
-    @Override
-    public List<Item> findItemsByCollectionId(UUID collectionId) {
-        return collectionRepository.findItemsByCollectionId(collectionId);
     }
 
     @Override

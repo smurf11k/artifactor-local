@@ -1,0 +1,29 @@
+.collectionManagerLabel {
+  -fx-font-weight: bold;
+  -fx-font-size: 16px;
+}
+
+.left-aligned-toggle {
+  -fx-alignment: baseline-left;
+}
+
+.menu {
+  -fx-padding: 20;
+}
+
+.userInfoPane {
+  -fx-padding: 10;
+  -fx-alignment: center-left;
+}
+
+.smallPadding {
+  -fx-padding: 10;
+}
+
+.mediumPadding {
+  -fx-padding: 20;
+}
+
+.boldText {
+  -fx-font-weight: bold;
+}

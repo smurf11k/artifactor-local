@@ -12,21 +12,20 @@ import lombok.*;
 @NoArgsConstructor
 public class Transaction implements Comparable<Transaction> {
 
-    public Transaction(
-            UUID id, UUID userId, UUID itemId, TransactionType type, LocalDateTime timestamp) {
-        System.out.println("Creating Transaction with arguments:");
-        System.out.println("1. id: " + id);
-        System.out.println("2. userId: " + userId);
-        System.out.println("3. itemId: " + itemId);
-        System.out.println("4. type: " + type);
-        System.out.println("5. timestamp: " + timestamp);
-    }
-
     @EqualsAndHashCode.Include private UUID id;
     private UUID userId;
     private UUID itemId;
     private TransactionType type;
     private LocalDateTime timestamp;
+
+    public Transaction(
+            UUID id, UUID userId, UUID itemId, TransactionType type, LocalDateTime timestamp) {
+        this.id = id;
+        this.userId = userId;
+        this.itemId = itemId;
+        this.type = type;
+        this.timestamp = timestamp;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -48,6 +47,21 @@ public class Transaction implements Comparable<Transaction> {
             return timeComparison;
         }
         return this.type.compareTo(other.type);
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction(id="
+                + id
+                + ", userId="
+                + userId
+                + ", itemId="
+                + itemId
+                + ", type="
+                + type
+                + ", timestamp="
+                + timestamp
+                + ")";
     }
 
     /** Builder для точнішого створення записів транзакцій */
@@ -89,6 +103,14 @@ public class Transaction implements Comparable<Transaction> {
         }
 
         public Transaction build() {
+            if (id == null
+                    || userId == null
+                    || itemId == null
+                    || type == null
+                    || timestamp == null) {
+                throw new IllegalStateException(
+                        "All fields (id, userId, itemId, type, timestamp) must be set");
+            }
             return new Transaction(id, userId, itemId, type, timestamp);
         }
     }

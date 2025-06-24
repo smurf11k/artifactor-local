@@ -8,6 +8,7 @@ import com.renata.domain.entities.User.Role;
 import com.renata.infrastructure.persistence.contract.UserRepository;
 import org.springframework.stereotype.Service;
 
+/** Реалізація сервісу для управління автентифікацією та авторизацією користувачів. */
 @Service
 final class AuthServiceImpl implements AuthService {
 
@@ -29,14 +30,14 @@ final class AuthServiceImpl implements AuthService {
         User user =
                 userRepository.findByUsername(username).stream()
                         .findFirst()
-                        .orElseThrow(() -> new AuthException("Invalid credentials"));
+                        .orElseThrow(() -> new AuthException("Неправильний логін"));
 
         if (!passwordService.verify(password, user.getPasswordHash())) {
             return false;
         }
 
         currentUser = user;
-        System.out.println("User logged in: " + username + ", ID: " + user.getId());
+        System.out.println("Користувач авторизований як: " + username + ", ID: " + user.getId());
         return true;
     }
 
@@ -51,7 +52,7 @@ final class AuthServiceImpl implements AuthService {
     @Override
     public User getCurrentUser() throws AuthException {
         if (!isAuthenticated()) {
-            throw new AuthException("Not authenticated");
+            throw new AuthException("Ви не авторизовані");
         }
         return currentUser;
     }
@@ -83,7 +84,7 @@ final class AuthServiceImpl implements AuthService {
     public void validatePermission(Role.EntityName entity, String action) throws AuthException {
         if (!hasPermission(entity, action)) {
             throw new AuthException(
-                    String.format("Required %s permission for %s not granted", action, entity));
+                    String.format("Потрібний %s дозвіл для %s not вам не надано", action, entity));
         }
     }
 }

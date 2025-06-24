@@ -1,18 +1,35 @@
 package com.renata.presentation.controller.item;
 
 import atlantafx.base.theme.Styles;
+import com.renata.application.contract.AuthService;
+import com.renata.application.contract.CollectionService;
 import com.renata.application.contract.ItemService;
 import com.renata.application.contract.MarketInfoService;
+import com.renata.application.contract.TransactionService;
+import com.renata.application.dto.TransactionStoreDto;
+import com.renata.application.exception.AuthException;
 import com.renata.domain.entities.Item;
 import com.renata.domain.entities.MarketInfo;
+import com.renata.domain.entities.Transaction;
+import com.renata.domain.entities.User;
+import com.renata.domain.entities.User.Role;
 import com.renata.domain.enums.AntiqueType;
 import com.renata.domain.enums.ItemCondition;
+import com.renata.domain.enums.TransactionType;
+import com.renata.domain.util.MarketInfoPriceGenerator;
+import com.renata.presentation.controller.collection.CollectionManagerController;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.util.SpringFXMLLoader;
+import com.renata.presentation.util.StyleManager;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -20,7 +37,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -33,6 +49,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -43,10 +61,17 @@ public class ItemListController {
     @Autowired private ItemService itemService;
     @Autowired private ApplicationContext context;
     @Autowired private MarketInfoService marketInfoService;
+    @Autowired private TransactionService transactionService;
+    @Autowired private AuthService authService;
+    @Autowired private CollectionService collectionService;
+    @Autowired private MessageManager messageManager;
+    @Autowired private StyleManager styleManager;
+    private Timeline refreshTimeline;
 
     @FXML private TableView<Item> itemTable;
     @FXML private TableColumn<Item, String> nameColumn;
     @FXML private TableColumn<Item, String> typeColumn;
+    @FXML private TableColumn<Item, Void> actionColumn;
     @FXML private TextField searchField;
     @FXML private ComboBox<AntiqueType> typeFilter;
     @FXML private TextField countryFilter;
@@ -66,8 +91,9 @@ public class ItemListController {
     @FXML private Label timestampLabel;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
+    @FXML private Button organizeButton;
 
-    private ObservableList<Item> itemList = FXCollections.observableArrayList();
+    private final ObservableList<Item> itemList = FXCollections.observableArrayList();
     private Item selectedItem;
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -79,10 +105,10 @@ public class ItemListController {
                         (thread, throwable) -> {
                             Platform.runLater(
                                     () ->
-                                            showErrorAlert(
-                                                    "Unexpected Error",
-                                                    "An unexpected error occurred: "
-                                                            + throwable.getMessage()));
+                                            messageManager.showErrorAlert(
+                                                    "Невідома помилка",
+                                                    "Щось пішло не так: ",
+                                                    throwable.getMessage()));
                         });
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -98,7 +124,7 @@ public class ItemListController {
                         }
                     } catch (Exception e) {
                         System.err.println(
-                                "Error fetching event type for item "
+                                "Не вийшло знайти стан ринкової ціни для предмету "
                                         + item.getId()
                                         + ": "
                                         + e.getMessage()
@@ -108,23 +134,50 @@ public class ItemListController {
                     return new SimpleStringProperty("N/A");
                 });
 
-        // Update the cell factory implementation
         typeColumn.setCellFactory(
                 column ->
-                        new TableCell<Item, String>() {
+                        new TableCell<>() {
                             private final Text text = new Text();
 
                             @Override
                             protected void updateItem(String type, boolean empty) {
                                 super.updateItem(type, empty);
-
                                 if (empty || type == null) {
                                     setGraphic(null);
                                     setText(null);
                                 } else {
                                     text.setText(type);
-                                    applyTypeStyle(text, type);
+                                    StyleManager.applyTypeStyle(text, type);
                                     setGraphic(text);
+                                }
+                            }
+                        });
+
+        actionColumn.setCellFactory(
+                column ->
+                        new TableCell<>() {
+                            private final Button sellButton = new Button();
+
+                            {
+                                sellButton.getStyleClass().add(Styles.SUCCESS);
+                                sellButton.setGraphic(new FontIcon("bx-dollar"));
+                                sellButton.setOnAction(
+                                        event -> {
+                                            Item item = getTableView().getItems().get(getIndex());
+                                            handleSell(item);
+                                        });
+                            }
+
+                            @Override
+                            protected void updateItem(Void item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (empty) {
+                                    setGraphic(null);
+                                } else {
+                                    Item tableItem = getTableView().getItems().get(getIndex());
+                                    boolean canSell = canUserSellItem(tableItem);
+                                    sellButton.setDisable(!canSell);
+                                    setGraphic(sellButton);
                                 }
                             }
                         });
@@ -144,9 +197,92 @@ public class ItemListController {
                         (obs, oldSelection, newSelection) -> {
                             selectedItem = newSelection;
                             updateItemDetails();
+                            boolean isItemSelected = selectedItem != null;
+                            User currentUser = authService.getCurrentUser();
+                            boolean isAdmin =
+                                    currentUser != null
+                                            && authService.hasPermission(
+                                                    Role.EntityName.ITEM, "update")
+                                            && currentUser.getRole() == Role.ADMIN;
+                            editButton.setDisable(!isItemSelected || !isAdmin);
+                            deleteButton.setDisable(!isItemSelected || !isAdmin);
+                            organizeButton.setDisable(!isItemSelected);
+                            addNewButton.setDisable(!isAdmin);
                         });
 
         loadItems();
+        startAutoRefresh();
+    }
+
+    public void loadItemsByCollection(UUID collectionId) {
+        try {
+            List<Item> items = itemService.findItemsByCollectionId(collectionId);
+            itemList.clear();
+            itemList.addAll(items);
+            if (!items.isEmpty()) {
+                itemTable.getSelectionModel().selectFirst();
+            }
+        } catch (Exception e) {
+            messageManager.showErrorAlert(
+                    "Помилка завантаження", "Не вийшло завантажити предмети для колекції: ", e.getMessage());
+        }
+    }
+
+    private boolean canUserSellItem(Item item) {
+        try {
+            User currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                return false;
+            }
+            UUID userId = currentUser.getId();
+            List<Transaction> userTransactions = transactionService.findByUserId(userId);
+            boolean hasPurchased =
+                    userTransactions.stream()
+                            .anyMatch(
+                                    t ->
+                                            t.getItemId().equals(item.getId())
+                                                    && t.getType() == TransactionType.PURCHASE);
+            boolean hasSold =
+                    userTransactions.stream()
+                            .anyMatch(
+                                    t ->
+                                            t.getItemId().equals(item.getId())
+                                                    && t.getType() == TransactionType.SALE);
+            return hasPurchased && !hasSold;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void handleSell(Item item) {
+        try {
+            User currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                return;
+            }
+            UUID userId = currentUser.getId();
+            Optional<MarketInfo> marketInfoOpt =
+                    marketInfoService.findLatestMarketInfo(item.getId());
+            if (marketInfoOpt.isEmpty()) {
+                messageManager.showErrorAlert(
+                        "Помилка продажу", "Не знайдено ринкової інформації для предмету: ", item.getName());
+                return;
+            }
+            TransactionStoreDto transactionDto =
+                    new TransactionStoreDto(
+                            userId, item.getId(), TransactionType.SALE, LocalDateTime.now());
+            transactionService.create(transactionDto);
+            messageManager.showInfoAlert(
+                    "Продаж",
+                    "Предмет продано",
+                "Предмет '" + item.getName() + "' успішно продано.");
+            loadItems();
+        } catch (Exception e) {
+            messageManager.showErrorAlert(
+                    "Помилка",
+                    "Не вийшло продати предмет '" + item.getName() + "': ",
+                    e.getMessage());
+        }
     }
 
     private void updateItemDetails() {
@@ -162,28 +298,34 @@ public class ItemListController {
             timestampLabel.setText("Останнє оновлення ціни: ");
             editButton.setDisable(true);
             deleteButton.setDisable(true);
+            addNewButton.setDisable(true);
         } else {
             String imagePath = selectedItem.getImagePath();
             try {
-                Image image =
-                        imagePath != null && !imagePath.isEmpty()
-                                ? new Image("file:" + imagePath, 150, 150, true, true)
-                                : new Image(getClass().getResourceAsStream("/images/fallback.png"));
-                if (image.isError()) {
-                    throw new Exception("Failed to load image");
+                Image image;
+                if (imagePath != null && !imagePath.isEmpty()) {
+                    image = new Image("file:" + imagePath);
+                    itemImage.setPreserveRatio(true);
+                    itemImage.setSmooth(true);
+                    itemImage.setImage(image);
+                } else {
+                    image = new Image(getClass().getResourceAsStream("/images/fallback.png"));
+                    itemImage.setImage(image);
                 }
-                itemImage.setImage(image);
+
+                if (image.isError()) {
+                    throw new Exception("Не вийшло завантажити зображення.");
+                }
             } catch (Exception e) {
                 try {
                     Image fallback =
                             new Image(getClass().getResourceAsStream("/images/fallback.png"));
                     itemImage.setImage(fallback);
                 } catch (Exception ex) {
-                    showErrorAlert(
-                            "Image Error", "Failed to load fallback image: " + ex.getMessage());
+                    messageManager.showErrorAlert(
+                            "Помилка зображення", "Не вийшло завантажити резервне зображення: ", ex.getMessage());
                 }
             }
-
             nameLabel.setText(
                     "Назва: " + (selectedItem.getName() != null ? selectedItem.getName() : ""));
             countryLabel.setText(
@@ -206,7 +348,6 @@ public class ItemListController {
                             + (selectedItem.getDescription() != null
                                     ? selectedItem.getDescription()
                                     : ""));
-
             try {
                 Optional<MarketInfo> marketInfoOpt =
                         marketInfoService.findLatestMarketInfo(selectedItem.getId());
@@ -224,62 +365,77 @@ public class ItemListController {
             } catch (Exception e) {
                 priceLabel.setText("Ціна: N/A");
                 timestampLabel.setText("Останнє оновлення ціни: N/A");
-                showErrorAlert(
-                        "Market Info Error", "Failed to load market info: " + e.getMessage());
+                messageManager.showErrorAlert(
+                        "Помилка ринкової інформації", "Не вийшло завантажити рикнову інформацію: ", e.getMessage());
             }
-
-            editButton.setDisable(false);
-            deleteButton.setDisable(false);
+            User currentUser = authService.getCurrentUser();
+            boolean isAdmin =
+                    currentUser != null
+                            && authService.hasPermission(Role.EntityName.ITEM, "update")
+                            && currentUser.getRole() == Role.ADMIN;
+            editButton.setDisable(!isAdmin);
+            deleteButton.setDisable(!isAdmin);
+            addNewButton.setDisable(!isAdmin);
         }
     }
 
-    // helper method for text colors
-    private void applyTypeStyle(Text text, String type) {
-        text.getStyleClass().clear();
+    private void startAutoRefresh() {
+        refreshTimeline =
+                new Timeline(
+                        new KeyFrame(
+                                Duration.minutes(
+                                        MarketInfoPriceGenerator.SCHEDULE_INTERVAL_MINUTES),
+                                event -> Platform.runLater(this::loadItems)));
+        refreshTimeline.setCycleCount(Timeline.INDEFINITE);
+        refreshTimeline.play();
+    }
 
-        text.getStyleClass().add(Styles.TEXT);
-
-        if (type != null) {
-            switch (type) {
-                case "LISTED":
-                    text.getStyleClass().add(Styles.ACCENT);
-                    break;
-                case "RELISTED":
-                    text.getStyleClass().add(Styles.WARNING);
-                    break;
-                case "PRICE_UPDATED":
-                    text.getStyleClass().add(Styles.SUCCESS);
-                    break;
-                case "PURCHASED":
-                    text.getStyleClass().add(Styles.DANGER);
-                    break;
-                default:
-                    text.getStyleClass().add(Styles.TEXT_SUBTLE);
-            }
+    public void stopAutoRefresh() {
+        if (refreshTimeline != null) {
+            refreshTimeline.stop();
         }
     }
 
     @FXML
     private void onRefresh() {
-        clearFilters();
         loadItems();
     }
 
     @FXML
     private void onAddNew() {
         try {
+            User currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                return;
+            }
+            if (!authService.hasPermission(Role.EntityName.ITEM, "create")
+                    || currentUser.getRole() != Role.ADMIN) {
+                messageManager.showErrorAlert(
+                        "Немає доступу", "Ви не маєте дозволу на створення предмета.", "");
+                return;
+            }
+            authService.validatePermission(Role.EntityName.ITEM, "create");
             SpringFXMLLoader loader = new SpringFXMLLoader(context);
             URL fxmlUrl = getClass().getResource("/com/renata/view/item/AddItem.fxml");
+            if (fxmlUrl == null) {
+                throw new Exception("AddItem.fxml не знайдено.");
+            }
             Parent root = (Parent) loader.load(fxmlUrl);
             ItemController controller = context.getBean(ItemController.class);
             controller.initForNewItem();
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
             stage.setScene(new Scene(root));
+            root.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
             stage.setTitle("Додавання антикваріату");
+            stage.setOnHidden(event -> loadItems());
             stage.show();
+        } catch (AuthException e) {
+            messageManager.showErrorAlert(
+                    "Помилка авторизації", "Не вдалося перевірити права доступу: ", e.getMessage());
         } catch (Exception e) {
-            showErrorAlert("Failed to open add item window", "Error: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Не вийшло відкрити вікно додавання предмету", "Помилка: ", e.getMessage());
         }
     }
 
@@ -291,28 +447,24 @@ public class ItemListController {
             AntiqueType selectedType = typeFilter.getValue();
             String country = countryFilter.getText() != null ? countryFilter.getText().trim() : "";
             ItemCondition selectedCondition = conditionFilter.getValue();
-
             if (!searchText.isEmpty()) {
                 filteredItems.addAll(itemService.findByName(searchText));
             } else {
                 filteredItems.addAll(itemService.findAll(0, 100));
             }
-
             if (selectedType != null) {
                 filteredItems.retainAll(itemService.findByType(selectedType));
             }
-
             if (!country.isEmpty()) {
                 filteredItems.retainAll(itemService.findByCountry(country));
             }
-
             if (selectedCondition != null) {
                 filteredItems.retainAll(itemService.findByCondition(selectedCondition));
             }
-
             itemList.setAll(filteredItems);
         } catch (Exception e) {
-            showErrorAlert("Filter Error", "Failed to apply filters: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка застосування фільтрів", "Не вийшло застосувати фільтри: ", e.getMessage());
         }
     }
 
@@ -325,7 +477,8 @@ public class ItemListController {
             conditionFilter.setValue(null);
             loadItems();
         } catch (Exception e) {
-            showErrorAlert("Clear Filter Error", "Failed to clear filters: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка очищення фільтрів", "Не вийшло очистити фільтри: ", e.getMessage());
         }
     }
 
@@ -333,18 +486,40 @@ public class ItemListController {
     private void handleEdit() {
         if (selectedItem != null) {
             try {
+                User currentUser = authService.getCurrentUser();
+                if (currentUser == null) {
+                    return;
+                }
+                if (!authService.hasPermission(Role.EntityName.ITEM, "update")
+                        || currentUser.getRole() != Role.ADMIN) {
+                    messageManager.showErrorAlert(
+                            "Помилка", "Немає доступу", "Ви не маєте дозволу на редагування предмета.");
+                    return;
+                }
+                authService.validatePermission(Role.EntityName.ITEM, "update");
                 SpringFXMLLoader loader = new SpringFXMLLoader(context);
                 URL fxmlUrl = getClass().getResource("/com/renata/view/item/AddItem.fxml");
+                if (fxmlUrl == null) {
+                    throw new Exception("AddItem.fxml не знайдено.");
+                }
                 Parent root = (Parent) loader.load(fxmlUrl);
                 ItemController controller = context.getBean(ItemController.class);
                 controller.setItem(selectedItem);
                 Stage stage = new Stage();
                 stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
                 stage.setScene(new Scene(root));
+                root.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
                 stage.setTitle("Редагування антикваріату");
+                stage.setOnHidden(event -> loadItems());
                 stage.show();
+            } catch (AuthException e) {
+                messageManager.showErrorAlert(
+                        "Помилка авторизації",
+                        "Не вдалося перевірити права доступу: ",
+                        e.getMessage());
             } catch (Exception e) {
-                showErrorAlert("Edit Error", "Failed to open edit window: " + e.getMessage());
+                messageManager.showErrorAlert(
+                        "Помилка редагування", "Не вийшло відкрити вікно редагування: ", e.getMessage());
             }
         }
     }
@@ -353,18 +528,33 @@ public class ItemListController {
     private void handleDelete() {
         if (selectedItem != null) {
             try {
+                User currentUser = authService.getCurrentUser();
+                if (currentUser == null) {
+                    return;
+                }
+                if (!authService.hasPermission(Role.EntityName.ITEM, "delete")
+                        || currentUser.getRole() != Role.ADMIN) {
+                    messageManager.showErrorAlert(
+                            "Помилка", "Немає доступу", "Ви не маєте дозволу на видалення предмета.");
+                    return;
+                }
+                authService.validatePermission(Role.EntityName.ITEM, "delete");
                 itemService.delete(selectedItem.getId());
                 loadItems();
-                showInfoAlert(
-                        "Item Deleted",
-                        "Item '" + selectedItem.getName() + "' successfully deleted.");
+                messageManager.showInfoAlert(
+                        "Успіх",
+                        "Предмет видалено",
+                    "Предмет '" + selectedItem.getName() + "' успішно видалено.");
+            } catch (AuthException e) {
+                messageManager.showErrorAlert(
+                        "Помилка авторизації",
+                        "Не вдалося перевірити права доступу: ",
+                        e.getMessage());
             } catch (Exception e) {
-                showErrorAlert(
-                        "Delete Error",
-                        "Failed to delete item '"
-                                + selectedItem.getName()
-                                + "': "
-                                + e.getMessage());
+                messageManager.showErrorAlert(
+                        "Помилка видалення",
+                        "Не вийшло видалити предмет '" + selectedItem.getName() + "': ",
+                        e.getMessage());
             }
         }
     }
@@ -378,30 +568,8 @@ public class ItemListController {
                 itemTable.getSelectionModel().selectFirst();
             }
         } catch (Exception e) {
-            showErrorAlert("Load Error", "Failed to load items: " + e.getMessage());
+            messageManager.showErrorAlert("Помилка завантаження", "Не вийшло завантажити предмети: ", e.getMessage());
         }
-    }
-
-    private void showInfoAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Success");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
-    }
-
-    private void showErrorAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
     }
 
     private String getStackTrace(Exception e) {
@@ -410,5 +578,38 @@ public class ItemListController {
             sb.append(element.toString()).append("\n");
         }
         return sb.toString();
+    }
+
+    @FXML
+    private void handleOrganize() {
+        if (selectedItem == null) {
+            return;
+        }
+        try {
+            User currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                return;
+            }
+            SpringFXMLLoader loader = new SpringFXMLLoader(context);
+            URL fxmlUrl =
+                    getClass().getResource("/com/renata/view/collection/CollectionManager.fxml");
+            if (fxmlUrl == null) {
+                throw new Exception("CollectionManager.fxml не знайдено.");
+            }
+            Parent root = (Parent) loader.load(fxmlUrl);
+            CollectionManagerController controller =
+                    context.getBean(CollectionManagerController.class);
+            controller.setSelectedItem(selectedItem);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
+            stage.setScene(new Scene(root));
+            root.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
+            stage.setTitle("Менеджер колекцій");
+            stage.setOnHidden(event -> loadItems());
+            stage.show();
+        } catch (Exception e) {
+            messageManager.showErrorAlert(
+                    "Не вийшло відкрити менеджер колекцій", "Помилка: ", e.getMessage());
+        }
     }
 }

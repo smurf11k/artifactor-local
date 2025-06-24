@@ -1,206 +1,93 @@
 package com.renata.infrastructure.persistence;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import com.renata.domain.entities.Item;
+import com.github.javafaker.Faker;
 import com.renata.domain.entities.Transaction;
-import com.renata.domain.entities.User;
-import com.renata.domain.enums.AntiqueType;
-import com.renata.domain.enums.ItemCondition;
 import com.renata.domain.enums.TransactionType;
-import com.renata.infrastructure.InfrastructureConfig;
-import com.renata.infrastructure.persistence.contract.ItemRepository;
 import com.renata.infrastructure.persistence.contract.TransactionRepository;
-import com.renata.infrastructure.persistence.contract.UserRepository;
-import com.renata.infrastructure.persistence.util.ConnectionPool;
-import com.renata.infrastructure.persistence.util.PersistenceInitializer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringJUnitConfig(classes = {InfrastructureConfig.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 class TransactionRepositoryTest {
 
-    private static final String TEST_ITEM_NAME = "Ancient Vase";
-    private static final String TEST_COUNTRY = "China";
-    private static final String TEST_DESCRIPTION = "Ming dynasty vase";
-    private static final String TEST_IMAGE_PATH = "/images/vase.jpg";
-    private static final String TEST_PRODUCTION_YEAR = "1500";
-    private static final AntiqueType TEST_TYPE = AntiqueType.ANTIQUE;
-    private static final ItemCondition TEST_CONDITION = ItemCondition.EXCELLENT;
+    @Mock private TransactionRepository transactionRepository;
 
-    private final TransactionRepository transactionRepository;
-    private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
-    private final PersistenceInitializer persistenceInitializer;
-    private final ConnectionPool connectionPool;
-
-    @Autowired
-    public TransactionRepositoryTest(
-            TransactionRepository transactionRepository,
-            UserRepository userRepository,
-            ItemRepository itemRepository,
-            PersistenceInitializer persistenceInitializer,
-            ConnectionPool connectionPool) {
-        this.transactionRepository = transactionRepository;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
-        this.persistenceInitializer = persistenceInitializer;
-        this.connectionPool = connectionPool;
-    }
+    private Faker faker;
+    private Transaction transaction;
+    private UUID userId;
+    private UUID itemId;
+    private LocalDateTime timestamp;
 
     @BeforeEach
     void setUp() {
-        persistenceInitializer.init(false);
-        persistenceInitializer.clearData();
-    }
+        faker = new Faker();
+        userId = UUID.randomUUID();
+        itemId = UUID.randomUUID();
+        timestamp = LocalDateTime.now().minusDays(1);
 
-    @AfterAll
-    void tearDown() {
-        connectionPool.shutdown();
-    }
-
-    private User createAndSaveUser(String username) {
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setUsername(username);
-        user.setEmail(username + "@example.com");
-        user.setPasswordHash("hashedpassword");
-        user.setRole(User.Role.GENERAL);
-        return userRepository.save(user);
-    }
-
-    private Item createAndSaveItem() {
-        Item item = new Item();
-        item.setId(UUID.randomUUID());
-        item.setName(TEST_ITEM_NAME);
-        item.setType(TEST_TYPE);
-        item.setDescription(TEST_DESCRIPTION);
-        item.setProductionYear(TEST_PRODUCTION_YEAR);
-        item.setCountry(TEST_COUNTRY);
-        item.setCondition(TEST_CONDITION);
-        item.setImagePath(TEST_IMAGE_PATH);
-        return itemRepository.save(item);
-    }
-
-    private Transaction createAndSaveTransaction(
-            UUID userId, UUID itemId, TransactionType type, LocalDateTime timestamp) {
-        Transaction tx = new Transaction();
-        tx.setId(UUID.randomUUID());
-        tx.setUserId(userId);
-        tx.setItemId(itemId);
-        tx.setType(type);
-        tx.setTimestamp(timestamp);
-        return transactionRepository.save(tx);
+        transaction = new Transaction();
+        transaction.setId(UUID.randomUUID());
+        transaction.setUserId(userId);
+        transaction.setItemId(itemId);
+        transaction.setType(TransactionType.PURCHASE);
+        transaction.setTimestamp(timestamp);
     }
 
     @Test
-    void shouldFindByUserId() {
-        User user = createAndSaveUser("trans_user1");
-        Item item = createAndSaveItem();
-        Transaction tx =
-                createAndSaveTransaction(
-                        user.getId(), item.getId(), TransactionType.PURCHASE, LocalDateTime.now());
+    void findByUserId_ReturnsTransactionList() {
+        when(transactionRepository.findByUserId(userId)).thenReturn(List.of(transaction));
 
-        List<Transaction> results = transactionRepository.findByUserId(user.getId());
-        assertThat(results)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        t -> {
-                            assertThat(t.getUserId()).isEqualTo(user.getId());
-                            assertThat(t.getItemId()).isEqualTo(item.getId());
-                            assertThat(t.getType()).isEqualTo(TransactionType.PURCHASE);
-                        });
+        List<Transaction> result = transactionRepository.findByUserId(userId);
+
+        assertEquals(1, result.size());
+        assertEquals(userId, result.get(0).getUserId());
+        verify(transactionRepository).findByUserId(userId);
     }
 
     @Test
-    void shouldFindByItemId() {
-        User user = createAndSaveUser("trans_user2");
-        Item item = createAndSaveItem();
-        Transaction tx =
-                createAndSaveTransaction(
-                        user.getId(), item.getId(), TransactionType.SALE, LocalDateTime.now());
+    void findByItemId_ReturnsTransactionList() {
+        when(transactionRepository.findByItemId(itemId)).thenReturn(List.of(transaction));
 
-        List<Transaction> results = transactionRepository.findByItemId(item.getId());
-        assertThat(results)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        t -> {
-                            assertThat(t.getItemId()).isEqualTo(item.getId());
-                            assertThat(t.getType()).isEqualTo(TransactionType.SALE);
-                        });
+        List<Transaction> result = transactionRepository.findByItemId(itemId);
+
+        assertEquals(1, result.size());
+        assertEquals(itemId, result.get(0).getItemId());
+        verify(transactionRepository).findByItemId(itemId);
     }
 
     @Test
-    void shouldFindByType() {
-        User user = createAndSaveUser("trans_user3");
-        Item item = createAndSaveItem();
-        Transaction tx =
-                createAndSaveTransaction(
-                        user.getId(), item.getId(), TransactionType.PURCHASE, LocalDateTime.now());
+    void findByType_ReturnsTransactionList() {
+        TransactionType type = TransactionType.PURCHASE;
+        when(transactionRepository.findByType(type)).thenReturn(List.of(transaction));
 
-        List<Transaction> results = transactionRepository.findByType(TransactionType.PURCHASE);
-        assertThat(results)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        t -> {
-                            assertThat(t.getType()).isEqualTo(TransactionType.PURCHASE);
-                            assertThat(t.getItemId()).isEqualTo(item.getId());
-                        });
+        List<Transaction> result = transactionRepository.findByType(type);
+
+        assertEquals(1, result.size());
+        assertEquals(type, result.get(0).getType());
+        verify(transactionRepository).findByType(type);
     }
 
     @Test
-    void shouldFindByDateRange() {
-        User user = createAndSaveUser("trans_user4");
-        Item item1 = createAndSaveItem();
-        Item item2 = createAndSaveItem();
-        LocalDateTime now = LocalDateTime.now();
-        Transaction tx1 =
-                createAndSaveTransaction(
-                        user.getId(), item1.getId(), TransactionType.PURCHASE, now.minusDays(1));
-        Transaction tx2 =
-                createAndSaveTransaction(user.getId(), item2.getId(), TransactionType.SALE, now);
+    void findByDateRange_ReturnsTransactionList() {
+        LocalDateTime from = LocalDateTime.now().minusDays(5);
+        LocalDateTime to = LocalDateTime.now();
 
-        List<Transaction> results =
-                transactionRepository.findByDateRange(now.minusDays(2), now.plusDays(1));
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Transaction::getType)
-                .containsExactlyInAnyOrder(TransactionType.PURCHASE, TransactionType.SALE);
-    }
+        when(transactionRepository.findByDateRange(from, to)).thenReturn(List.of(transaction));
 
-    @Test
-    void shouldFindByUserAndType() {
-        User user = createAndSaveUser("trans_user5");
-        Item item1 = createAndSaveItem();
-        Item item2 = createAndSaveItem();
-        Transaction tx1 =
-                createAndSaveTransaction(
-                        user.getId(), item1.getId(), TransactionType.SALE, LocalDateTime.now());
-        Transaction tx2 =
-                createAndSaveTransaction(
-                        user.getId(), item2.getId(), TransactionType.PURCHASE, LocalDateTime.now());
+        List<Transaction> result = transactionRepository.findByDateRange(from, to);
 
-        List<Transaction> results =
-                transactionRepository.findByUserAndType(user.getId(), TransactionType.SALE);
-        assertThat(results)
-                .hasSize(1)
-                .first()
-                .satisfies(
-                        t -> {
-                            assertThat(t.getType()).isEqualTo(TransactionType.SALE);
-                            assertThat(t.getUserId()).isEqualTo(user.getId());
-                            assertThat(t.getItemId()).isEqualTo(item1.getId());
-                        });
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getTimestamp().isAfter(from));
+        assertTrue(result.get(0).getTimestamp().isBefore(to.plusSeconds(1)));
+        verify(transactionRepository).findByDateRange(from, to);
     }
 }

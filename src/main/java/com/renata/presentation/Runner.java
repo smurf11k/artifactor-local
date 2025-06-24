@@ -1,10 +1,12 @@
 package com.renata.presentation;
 
-import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
+import com.renata.domain.util.MarketInfoPriceGenerator;
 import com.renata.infrastructure.InfrastructureConfig;
 import com.renata.infrastructure.persistence.util.ConnectionPool;
 import com.renata.infrastructure.persistence.util.PersistenceInitializer;
+import com.renata.presentation.controller.item.ItemListController;
+import com.renata.presentation.controller.market.MarketController;
 import com.renata.presentation.util.SpringFXMLLoader;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -94,7 +96,6 @@ public class Runner extends Application {
         progressBar = new ProgressBar();
         progressBar.setId("splash-progress-bar");
         progressBar.setPrefWidth(360);
-        // progressBar.setStyle("-fx-padding: 0 20 20 20;");
 
         StackPane stackPane = new StackPane(imageView, progressBar);
         stackPane.setAlignment(Pos.BOTTOM_CENTER);
@@ -117,11 +118,25 @@ public class Runner extends Application {
             var mainFxmlResource = Runner.class.getResource("/com/renata/view/Main.fxml");
             Parent parent = (Parent) fxmlLoader.load(mainFxmlResource);
             Scene scene = new Scene(parent, 1120, 650);
+            scene.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
             stage.setTitle("Artifactor");
             stage.setScene(scene);
             stage.setMinWidth(1120);
             stage.setMinHeight(650);
             stage.show();
+
+            stage.setOnCloseRequest(
+                    event -> {
+                        springContext
+                                .getBean(MarketInfoPriceGenerator.class)
+                                .stopGeneratingMarketInfo();
+                        springContext.getBean(MarketController.class).stopAutoRefresh();
+                        springContext.getBean(ItemListController.class).stopAutoRefresh();
+                        springContext.getBean(ConnectionPool.class).shutdown();
+                        springContext.close();
+                        Platform.exit();
+                    });
+
         } catch (Exception e) {
             System.err.println("Failed to load main application: " + e.getMessage());
             Platform.exit();
@@ -131,8 +146,6 @@ public class Runner extends Application {
     public static void main(String[] args) {
         springContext = new AnnotationConfigApplicationContext(InfrastructureConfig.class);
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
         launch(args);
-        springContext.getBean(ConnectionPool.class).shutdown();
     }
 }

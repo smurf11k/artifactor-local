@@ -8,13 +8,18 @@ import com.renata.domain.entities.Item;
 import com.renata.domain.entities.Transaction;
 import com.renata.domain.entities.User;
 import com.renata.domain.enums.TransactionType;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.util.SpringFXMLLoader;
+import com.renata.presentation.util.StyleManager;
 import java.net.URL;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -40,6 +45,8 @@ public class TransactionListController {
     @Autowired private UserService userService;
     @Autowired private ItemService itemService;
     @Autowired private ApplicationContext context;
+    @Autowired private MessageManager messageManager;
+    @Autowired private StyleManager styleManager;
 
     @FXML private TableView<Transaction> transactionTable;
     @FXML private TableColumn<Transaction, UUID> idColumn;
@@ -51,13 +58,14 @@ public class TransactionListController {
     @FXML private TextField searchField;
     @FXML private ComboBox<TransactionType> typeFilter;
     @FXML private TextField usernameFilter;
+    @FXML private DatePicker fromDateFilter;
+    @FXML private DatePicker toDateFilter;
     @FXML private Button applyFilterButton;
     @FXML private Button clearFilterButton;
     @FXML private Button refreshButton;
+    @FXML private Button generateReportButton;
 
     private ObservableList<Transaction> transactionList = FXCollections.observableArrayList();
-    private static final DateTimeFormatter DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @FXML
     public void initialize() {
@@ -66,10 +74,10 @@ public class TransactionListController {
                         (thread, throwable) ->
                                 Platform.runLater(
                                         () ->
-                                                showErrorAlert(
-                                                        "Unexpected Error",
-                                                        "An unexpected error occurred: "
-                                                                + throwable.getMessage())));
+                                                messageManager.showErrorAlert(
+                                                        "Невідома помилка",
+                                                        "Щост пішло не так: ",
+                                                        throwable.getMessage())));
 
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         userIdColumn.setCellValueFactory(
@@ -100,7 +108,9 @@ public class TransactionListController {
         timestampColumn.setCellValueFactory(
                 cellData ->
                         new SimpleObjectProperty<>(
-                                cellData.getValue().getTimestamp().format(DATE_TIME_FORMATTER)));
+                                cellData.getValue()
+                                        .getTimestamp()
+                                        .format(styleManager.DATE_TIME_FORMATTER)));
 
         actionsColumn.setCellFactory(
                 param ->
@@ -149,6 +159,9 @@ public class TransactionListController {
         typeFilter.getItems().addAll(TransactionType.values());
         typeFilter.setValue(null);
 
+        fromDateFilter.setConverter(styleManager.getLocalDateStringConverter());
+        toDateFilter.setConverter(styleManager.getLocalDateStringConverter());
+
         transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         transactionTable.setItems(transactionList);
         loadTransactions();
@@ -156,48 +169,61 @@ public class TransactionListController {
 
     @FXML
     private void onRefresh() {
-        clearFilters();
         loadTransactions();
     }
 
     @FXML
     private void applySearchAndFilters() {
         try {
-            List<Transaction> filteredTransactions = new ArrayList<>();
+            List<Transaction> allTransactions = transactionService.findAll(0, Integer.MAX_VALUE);
+            List<Transaction> filteredTransactions = new ArrayList<>(allTransactions);
+
             String searchText = searchField.getText() != null ? searchField.getText().trim() : "";
             TransactionType selectedType = typeFilter.getValue();
             String userIdText =
                     usernameFilter.getText() != null ? usernameFilter.getText().trim() : "";
+            LocalDate fromDate = fromDateFilter.getValue();
+            LocalDate toDate = toDateFilter.getValue();
+
+            if (fromDate != null || toDate != null) {
+                LocalDateTime from = fromDate != null ? fromDate.atStartOfDay() : LocalDateTime.MIN;
+                LocalDateTime to =
+                        toDate != null ? toDate.atTime(LocalTime.MAX) : LocalDateTime.MAX;
+                filteredTransactions.removeIf(
+                        t -> t.getTimestamp().isBefore(from) || t.getTimestamp().isAfter(to));
+            }
 
             if (!searchText.isEmpty()) {
                 List<Item> items = itemService.findByName(searchText);
                 if (!items.isEmpty()) {
-                    for (Item item : items) {
-                        filteredTransactions.addAll(transactionService.findByItemId(item.getId()));
-                    }
+                    List<UUID> itemIds = items.stream().map(Item::getId).toList();
+                    filteredTransactions.removeIf(
+                            t -> t.getItemId() == null || !itemIds.contains(t.getItemId()));
+                } else {
+                    filteredTransactions.clear();
                 }
-
-            } else {
-                filteredTransactions.addAll(transactionService.findAll(0, 100));
             }
 
             if (selectedType != null) {
-                filteredTransactions.retainAll(transactionService.findByType(selectedType));
+                filteredTransactions.removeIf(t -> t.getType() != selectedType);
             }
 
             if (!userIdText.isEmpty()) {
-
                 User user = userService.findByUsername(userIdText);
                 if (user != null) {
-                    filteredTransactions.retainAll(transactionService.findByUserId(user.getId()));
+                    filteredTransactions.removeIf(
+                            t -> t.getUserId() == null || !t.getUserId().equals(user.getId()));
+                } else {
+                    filteredTransactions.clear();
                 }
             }
 
             transactionList.setAll(filteredTransactions);
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Помилка застосування фільтрів",
-                    "Не вийшло застосувати фільтри: " + e.getMessage());
+                    "Не вийшло застосувати фільтри: ",
+                    e.getMessage());
         }
     }
 
@@ -206,11 +232,63 @@ public class TransactionListController {
         try {
             searchField.clear();
             typeFilter.setValue(null);
+            fromDateFilter.setValue(null);
+            toDateFilter.setValue(null);
             usernameFilter.clear();
             loadTransactions();
         } catch (Exception e) {
-            showErrorAlert(
-                    "Помилка очистки фільтрів", "Не вийшло очистити фільтри: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка очистки фільтрів", "Не вийшло очистити фільтри: ", e.getMessage());
+        }
+    }
+
+    @FXML
+    private void generateReport() {
+        try {
+            Predicate<Transaction> predicate =
+                    transaction -> {
+                        String searchText =
+                                searchField.getText() != null ? searchField.getText().trim() : "";
+                        TransactionType selectedType = typeFilter.getValue();
+                        String userIdText =
+                                usernameFilter.getText() != null
+                                        ? usernameFilter.getText().trim()
+                                        : "";
+                        boolean matches = true;
+
+                        if (!searchText.isEmpty()) {
+                            List<Item> items = itemService.findByName(searchText);
+                            matches =
+                                    items.stream()
+                                            .anyMatch(
+                                                    item ->
+                                                            item.getId()
+                                                                    .equals(
+                                                                            transaction
+                                                                                    .getItemId()));
+                        }
+
+                        if (selectedType != null) {
+                            matches = matches && transaction.getType().equals(selectedType);
+                        }
+
+                        if (!userIdText.isEmpty()) {
+                            User user = userService.findByUsername(userIdText);
+                            matches =
+                                    matches
+                                            && user != null
+                                            && user.getId().equals(transaction.getUserId());
+                        }
+
+                        return matches;
+                    };
+
+            transactionService.generateReport(predicate);
+            messageManager.showInfoAlert(
+                    "Успіх", "Звіт згенеровано", "Звіт транзакцій успішно згенеровано.");
+        } catch (Exception e) {
+            messageManager.showErrorAlert(
+                    "Помилка генерації звіту", "Не вдалося згенерувати звіт: ", e.getMessage());
         }
     }
 
@@ -225,12 +303,12 @@ public class TransactionListController {
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
             stage.setScene(new Scene(root));
+            root.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
             stage.setTitle("Редагування транзакції");
             stage.show();
         } catch (Exception e) {
-            showErrorAlert(
-                    "Не вийшло відкрити вікно редагування транзакції",
-                    "Помилка: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Не вийшло відкрити вікно редагування транзакції", "Помилка: ", e.getMessage());
         }
     }
 
@@ -238,16 +316,17 @@ public class TransactionListController {
         try {
             transactionService.delete(transaction.getId());
             loadTransactions();
-            showInfoAlert(
+            messageManager.showInfoAlert(
+                    "Успіх",
                     "Транзакцію видалено",
-                    "Транзакцію з ID '" + transaction.getId() + "' успішно видалено.");
+                "Транзакцію з ID '" + transaction.getId() + "' успішно видалено.");
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Не вийшло видалити транзакцію",
                     "Помилка видалення транзакції з ID '"
                             + (transaction != null ? transaction.getId() : "unknown")
-                            + "': "
-                            + e.getMessage());
+                            + "': ",
+                    e.getMessage());
         }
     }
 
@@ -257,31 +336,10 @@ public class TransactionListController {
             transactionList.clear();
             transactionList.addAll(transactions);
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Не вийшло завантажити транзакції",
-                    "Помилка завантаження транзакцій: " + e.getMessage());
+                    "Помилка завантаження транзакцій: ",
+                    e.getMessage());
         }
-    }
-
-    private void showInfoAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Успіх");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
-    }
-
-    private void showErrorAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Помилка");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
     }
 }

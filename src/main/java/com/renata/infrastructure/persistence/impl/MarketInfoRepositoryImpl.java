@@ -17,44 +17,20 @@ import org.springframework.stereotype.Repository;
 final class MarketInfoRepositoryImpl extends GenericRepository<MarketInfo, UUID>
         implements MarketInfoRepository {
 
-    /**
-     * Конструктор репозиторію.
-     *
-     * @param connectionPool пул з'єднань до бази даних
-     */
     public MarketInfoRepositoryImpl(ConnectionPool connectionPool) {
         super(connectionPool, MarketInfo.class, "market_info");
     }
 
-    /**
-     * Пошук ринкової інформації за ідентифікатором антикваріату.
-     *
-     * @param itemId ідентифікатор антикваріату
-     * @return список ринкової інформації
-     */
     @Override
     public List<MarketInfo> findByItemId(UUID itemId) {
         return findByField("item_id", itemId);
     }
 
-    /**
-     * Пошук ринкової інформації за типом події.
-     *
-     * @param type тип ринкової події
-     * @return список ринкової інформації
-     */
     @Override
     public List<MarketInfo> findByEventType(MarketEventType type) {
         return findByField("type", type.name());
     }
 
-    /**
-     * Пошук ринкової інформації за діапазоном дат.
-     *
-     * @param from початкова дата
-     * @param to кінцева дата
-     * @return список ринкової інформації
-     */
     @Override
     public List<MarketInfo> findByDateRange(LocalDateTime from, LocalDateTime to) {
         String sql =
@@ -80,12 +56,6 @@ final class MarketInfoRepositoryImpl extends GenericRepository<MarketInfo, UUID>
         }
     }
 
-    /**
-     * Зіставлення ResultSet в ринкову інформацію.
-     *
-     * @param rs результат запиту
-     * @return ринкова інформація
-     */
     private MarketInfo mapResultSetToMarketInfo(ResultSet rs) {
         try {
             MarketInfo marketInfo = new MarketInfo();

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Інтерфейс для управління сутностями антикваріату, включаючи операції з файлами картинок. */
+/** Сервіс для управління сутностями антикваріату, включаючи операції з файлами картинок. */
 public interface ItemService {
     /**
      * Створює новий антикваріат та, за потреби, завантажує картинку.
@@ -29,7 +29,6 @@ public interface ItemService {
     /**
      * Оновлює існуючий антикваріат та, за потреби, оновлює картинку.
      *
-     * @param id ідентифікатор антикваріату для оновлення
      * @param itemUpdateDto DTO з даними для оновлення антикваріату
      * @param image потік даних нової картинки, може бути null
      * @param imageName ім'я файлу нової картинки, може бути null
@@ -37,7 +36,7 @@ public interface ItemService {
      * @throws DatabaseAccessException якщо виникає помилка при роботі з базою даних
      * @throws FileStorageException якщо виникає помилка при роботі з файлами
      */
-    Item update(UUID id, ItemUpdateDto itemUpdateDto, InputStream image, String imageName);
+    Item update(ItemUpdateDto itemUpdateDto, InputStream image, String imageName);
 
     /**
      * Видаляє антикваріат та всі пов'язані файли.
@@ -96,4 +95,12 @@ public interface ItemService {
      * @return список антикваріату
      */
     List<Item> findByCondition(ItemCondition condition);
+
+    /**
+     * Отримує всі елементи конкретної колекції.
+     *
+     * @param collectionId ідентифікатор колекції
+     * @return список елементів у колекції
+     */
+    List<Item> findItemsByCollectionId(UUID collectionId);
 }

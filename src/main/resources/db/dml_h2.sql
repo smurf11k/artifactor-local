@@ -5,7 +5,8 @@ INSERT INTO users (id, username, password_hash, email, role) VALUES
 ('87c8c198-3a1f-4264-9014-42caa723b313', 'marina_kolov', '$2b$12$1ml2v0ljd54Z7WZxsqW0xe0fVOsMQLS6wNvHTDtxjzOaEfRogvy6G', 'marina.kolov@example.org', 'GENERAL'),
 ('cabfab2b-18cb-4f92-bd4a-b586c7985eac', 'collector.lee', '$2b$12$7O2U19CzRL9jPQZKwjE8HeuI.4A2xJ7g/xeZf6ULzDuMtfzWmDvZK', 'lee.c@example.net', 'ADMIN'),
 ('56d7d61e-0d4c-4d39-8860-6f46f435f2ea', 'ana_gomez', '$2b$12$3R0zYozuqZGxWkwJ2KR0neZKhUkU0dfM9OD0KTu9xquUs9Y92XZra', 'ana.g@example.com', 'GENERAL'),
-('c0d9db8f-9097-44ab-ad5c-587abc2d0a18', 'adm1n', '$2b$10$5taSccwdaQUJ.3OrTzIZmeHa6kzNEzg.UTa42k/TkRQ3YxuafBP5.', 'admin.email@example.com', 'ADMIN');
+('c0d9db8f-9097-44ab-ad5c-587abc2d0a18', 'adm1n', '$2b$10$5taSccwdaQUJ.3OrTzIZmeHa6kzNEzg.UTa42k/TkRQ3YxuafBP5.', 'admin.email@example.com', 'ADMIN'),
+('c0d9db8f-9097-44ab-ad5c-587abc2d0a12', 'general', '$2b$10$5taSccwdaQUJ.3OrTzIZmeHa6kzNEzg.UTa42k/TkRQ3YxuafBP5.', 'general.email@example.com', 'GENERAL');
 
 -- ITEMS
 INSERT INTO items (id, name, type, description, production_year, country, condition, image_path) VALUES

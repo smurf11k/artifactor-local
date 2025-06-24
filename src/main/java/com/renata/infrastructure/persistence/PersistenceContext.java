@@ -37,7 +37,7 @@ public class PersistenceContext {
     private Connection connection;
     private final Map<Class<?>, Repository<?, ?>> repositories;
     private final List<Object> newEntities;
-    private final Map<Object, Object> updatedEntities; // Map<Id, Entity>
+    private final Map<Object, Object> updatedEntities;
     private final List<Object> deletedEntities;
 
     /**
@@ -127,7 +127,7 @@ public class PersistenceContext {
         try {
             for (Object entity : newEntities) {
                 Repository<Object, Object> repository = getRepository(entity.getClass());
-                System.out.println("Saving entity: " + entity); // Логування
+                System.out.println("Збереження сутності: " + entity);
                 repository.save(entity);
             }
 

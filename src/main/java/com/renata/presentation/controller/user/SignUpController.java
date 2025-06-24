@@ -1,33 +1,25 @@
 package com.renata.presentation.controller.user;
 
-import com.renata.application.contract.UserService;
+import com.renata.application.contract.SignUpService;
 import com.renata.application.dto.UserStoreDto;
-import com.renata.application.exception.SignUpException;
-import com.renata.application.exception.ValidationException;
 import com.renata.domain.entities.User.Role;
-import com.renata.infrastructure.api.EmailSender;
-import com.renata.infrastructure.api.exception.VerificationException;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.viewmodel.UserViewModel;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- * Контролер реєстрації нового користувача. Керує: валідацією даних, верифікацією email, створенням
- * акаунта через UserService.
- */
 @Component
 public class SignUpController {
 
-    @Autowired private UserService userService;
-    @Autowired private EmailSender emailSender;
+    @Autowired private SignUpService signUpService;
+    @Autowired private MessageManager messageManager;
 
     @FXML private TextField usernameField;
     @FXML private TextField emailField;
@@ -42,13 +34,7 @@ public class SignUpController {
         roleComboBox.getItems().addAll(Role.values());
         roleComboBox.setValue(Role.GENERAL);
 
-        userViewModel =
-                new UserViewModel(
-                        UUID.randomUUID(),
-                        "JohnDoe",
-                        "john.doe@example.com",
-                        "password123",
-                        Role.GENERAL);
+        userViewModel = new UserViewModel(UUID.randomUUID(), "", "", "", Role.GENERAL);
 
         bindFieldsToViewModel();
     }
@@ -62,27 +48,10 @@ public class SignUpController {
 
     @FXML
     private void onSave() {
-        if (isSaving) {
-            return;
-        }
+        if (isSaving) return;
         isSaving = true;
 
         try {
-            String email = userViewModel.getEmail().get();
-            emailSender.initiateVerification(email);
-
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Верифікація пошти");
-            dialog.setHeaderText("Введіть код верифікації");
-            dialog.setContentText("Будь ласка введіть код надісланий на " + email + ":");
-
-            Optional<String> result = dialog.showAndWait();
-            if (!result.isPresent()) {
-                throw new VerificationException("Верифікація скасована користувачем.");
-            }
-
-            emailSender.verifyCodeFromInput(email, result::get);
-
             UserStoreDto userStoreDto =
                     new UserStoreDto(
                             userViewModel.getUsername().get(),
@@ -90,28 +59,34 @@ public class SignUpController {
                             userViewModel.getEmail().get(),
                             userViewModel.getRole().get());
 
-            userService.create(userStoreDto);
+            Supplier<String> verificationCodeSupplier = this::askVerificationCode;
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Інформація користувача");
-            alert.setHeaderText("Користувач успішно збережений");
-            alert.setContentText(userViewModel.toString());
-            alert.showAndWait();
+            signUpService.signUp(userStoreDto, verificationCodeSupplier);
 
-        } catch (SignUpException | ValidationException | VerificationException e) {
-            showErrorAlert(e.getMessage());
+            messageManager.showInfoAlert(
+                    "Інформація користувача",
+                    "Користувач успішно збережений",
+                    userViewModel.toString());
+
         } catch (Exception e) {
-            showErrorAlert("Щось пішло не так: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Реєстрація не вдалась", "Щось пішло не так: ", e.getMessage());
         } finally {
             isSaving = false;
         }
     }
 
-    private void showErrorAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Реєстрація не вдалась");
-        alert.setHeaderText("Помилка");
-        alert.setContentText(message);
-        alert.showAndWait();
+    private String askVerificationCode() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Верифікація пошти");
+        dialog.setHeaderText("Введіть код верифікації");
+        dialog.setContentText("Будь ласка, введіть код, надісланий на вашу електронну адресу:");
+
+        Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
+
+        Optional<String> result = dialog.showAndWait();
+        return result.orElseThrow(
+                () -> new RuntimeException("Верифікацію скасовано користувачем."));
     }
 }

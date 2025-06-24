@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.UUID;
 
-/** Інтерфейс для роботи зі зберіганням файлів. */
+/** Сервіс для роботи зі зберіганням файлів. */
 public interface FileStorageService {
 
     /**

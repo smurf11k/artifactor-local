@@ -3,12 +3,11 @@ package com.renata.application.contract;
 import com.renata.application.dto.CollectionStoreDto;
 import com.renata.application.dto.CollectionUpdateDto;
 import com.renata.domain.entities.Collection;
-import com.renata.domain.entities.Item;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Інтерфейс для управління колекціями антикваріату. */
+/** Сервіс для управління колекціями антикваріату. */
 public interface CollectionService {
     /**
      * Створює нову колекцію.
@@ -21,11 +20,10 @@ public interface CollectionService {
     /**
      * Оновлює існуючу колекцію.
      *
-     * @param id ідентифікатор колекції для оновлення
      * @param collectionUpdateDto DTO з даними для оновлення колекції
      * @return оновлена колекція
      */
-    Collection update(UUID id, CollectionUpdateDto collectionUpdateDto);
+    Collection update(CollectionUpdateDto collectionUpdateDto);
 
     /**
      * Видаляє колекцію за ідентифікатором.
@@ -58,14 +56,6 @@ public interface CollectionService {
      * @return список колекцій користувача
      */
     List<Collection> findByUserId(UUID userId);
-
-    /**
-     * Отримує всі елементи конкретної колекції.
-     *
-     * @param collectionId ідентифікатор колекції
-     * @return список елементів у колекції
-     */
-    List<Item> findItemsByCollectionId(UUID collectionId);
 
     /**
      * Додає елемент до колекції.

@@ -49,21 +49,31 @@ public class PersistenceInitializer {
                 Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
 
-            // Execute DDL script
             statement.execute(getSQL(DDL_SCRIPT_PATH));
-            // Execute DML script if specified
-            if (isRunDml) {
+
+            boolean shouldRunDml = isRunDml && isDatabaseEmpty(connection);
+            if (shouldRunDml) {
                 statement.execute(getSQL(DML_SCRIPT_PATH));
             }
+
             connection.commit();
+
+            if (shouldRunDml) {
+                itemTestDataGenerator.generateTestData();
+                marketInfoPriceGenerator.startGeneratingMarketInfo();
+            }
         } catch (SQLException e) {
             throw new DatabaseAccessException("Помилка ініціалізації бази даних", e);
         }
+    }
 
-        // Generate test data and initial market info if DML is run
-        if (isRunDml) {
-            itemTestDataGenerator.generateTestData();
-            marketInfoPriceGenerator.generateMarketInfo();
+    /** Перевіряє чи база даних пуста (для уникнення повторної ініціалізації з dml) */
+    private boolean isDatabaseEmpty(Connection connection) {
+        try (var stmt = connection.createStatement();
+                var rs = stmt.executeQuery("SELECT COUNT(*) FROM users")) {
+            return rs.next() && rs.getInt(1) == 0;
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Не вдалося перевірити вміст бази", e);
         }
     }
 

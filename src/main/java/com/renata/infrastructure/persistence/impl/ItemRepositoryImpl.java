@@ -16,65 +16,39 @@ import org.springframework.stereotype.Repository;
 @Repository
 final class ItemRepositoryImpl extends GenericRepository<Item, UUID> implements ItemRepository {
 
-    /**
-     * Конструктор репозиторію.
-     *
-     * @param connectionPool пул з'єднань до бази даних
-     */
     public ItemRepositoryImpl(ConnectionPool connectionPool) {
         super(connectionPool, Item.class, "items");
     }
 
-    /**
-     * Пошук антикваріату за назвою.
-     *
-     * @param name назва
-     * @return список антикваріату
-     */
     @Override
     public List<Item> findByName(String name) {
         return findByField("name", name);
     }
 
-    /**
-     * Пошук антикваріату за типом.
-     *
-     * @param type тип антикваріату
-     * @return список антикваріату
-     */
     @Override
     public List<Item> findByType(AntiqueType type) {
         return findByField("type", type.name());
     }
 
-    /**
-     * Пошук антикваріату за країною походження.
-     *
-     * @param country країна
-     * @return список антикваріату
-     */
     @Override
     public List<Item> findByCountry(String country) {
         return findByField("country", country);
     }
 
-    /**
-     * Пошук антикваріату за його станом.
-     *
-     * @param condition стан антикваріату
-     * @return список антикваріату
-     */
     @Override
     public List<Item> findByCondition(ItemCondition condition) {
         return findByField("condition", condition.name());
     }
 
-    /**
-     * Зіставлення ResultSet в антикваріат.
-     *
-     * @param rs результат запиту
-     * @return антикваріат
-     */
+    @Override
+    public List<Item> findItemsByCollectionId(UUID collectionId) {
+        String baseSql =
+                "SELECT a.* FROM items a JOIN item_collection ac ON a.id = ac.item_id WHERE"
+                        + " ac.collection_id = ?";
+        return executeQuery(
+                baseSql, stmt -> stmt.setObject(1, collectionId), this::mapResultSetToItem);
+    }
+
     private Item mapResultSetToItem(ResultSet rs) {
         try {
             Item item = new Item();

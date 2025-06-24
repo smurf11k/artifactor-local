@@ -6,14 +6,20 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record UserStoreDto(
-        @NotBlank(message = "username can't be blank")
-                @Size(min = 6, max = 34, message = "size should be from 4 to 34 chars")
+        @NotBlank(message = "Логін не може бути порожнім")
+                @Size(
+                        min = 6,
+                        max = 34,
+                        message = "Логін може містити не менше 6 символів і не більше 34")
                 String username,
-        @NotBlank(message = "can't be blank")
-                @Size(min = 8, max = 72, message = "size should be from 8 to 72 chars")
-                String password, // TODO: add regex pattern validation
-        @NotBlank(message = "should not be blank")
-                @Email(message = "should be a valid email")
-                @Size(max = 128, message = "cant be more than 128 chars")
+        @NotBlank(message = "Пароль не може бути порожнім")
+                @Size(
+                        min = 8,
+                        max = 72,
+                        message = "Пароль може містити не менше 8 символів і не більше 72")
+                String password,
+        @NotBlank(message = "Пошта не може бути порожньою")
+                @Email(message = "Пошта має бути валідною")
+                @Size(max = 128, message = "Пошта не може бути довшою за 128 символів")
                 String email,
         Role role) {}

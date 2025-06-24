@@ -3,7 +3,7 @@ package com.renata.application.contract;
 import com.renata.application.dto.UserStoreDto;
 import java.util.function.Supplier;
 
-/** Інтерфейс для реєстрації нових користувачів. */
+/** Сервіс для реєстрації нових користувачів. */
 public interface SignUpService {
     /**
      * Виконує процес реєстрації нового користувача з підтвердженням.

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Інтерфейс для операцій з ринковою інформацією. */
+/** Сервіс для операцій з ринковою інформацією. */
 public interface MarketInfoService {
 
     /**
@@ -23,11 +23,10 @@ public interface MarketInfoService {
     /**
      * Оновлення існуючої ринкової інформації.
      *
-     * @param id ідентифікатор ринкової інформації
      * @param marketInfoUpdateDto DTO для оновлення ринкової інформації
      * @return оновлена ринкова інформація
      */
-    MarketInfo update(UUID id, MarketInfoUpdateDto marketInfoUpdateDto);
+    MarketInfo update(MarketInfoUpdateDto marketInfoUpdateDto);
 
     /**
      * Видалення ринкової інформації за ідентифікатором.

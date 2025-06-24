@@ -41,4 +41,12 @@ public interface ItemRepository extends Repository<Item, UUID> {
      * @return список антикваріату
      */
     List<Item> findByCondition(ItemCondition condition);
+
+    /**
+     * Пошук антикваріату у колекції за ідентифікатором колекції.
+     *
+     * @param collectionId ідентифікатор колекції
+     * @return список антикваріату
+     */
+    List<Item> findItemsByCollectionId(UUID collectionId);
 }

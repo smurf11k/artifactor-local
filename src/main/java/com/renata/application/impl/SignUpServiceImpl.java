@@ -7,6 +7,7 @@ import com.renata.infrastructure.api.EmailSender;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
+/** Реалізація сервісу для реєстрації нових користувачів. */
 @Service
 final class SignUpServiceImpl implements SignUpService {
 

@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/** Реалізація сервісу для операцій з ринковою інформацією. */
 @Service
 final class MarketInfoServiceImpl implements MarketInfoService {
 
@@ -53,30 +54,28 @@ final class MarketInfoServiceImpl implements MarketInfoService {
     }
 
     @Override
-    public MarketInfo update(UUID id, MarketInfoUpdateDto marketInfoUpdateDto) {
+    public MarketInfo update(MarketInfoUpdateDto marketInfoUpdateDto) {
         Set<jakarta.validation.ConstraintViolation<MarketInfoUpdateDto>> violations =
                 validator.validate(marketInfoUpdateDto);
         if (!violations.isEmpty()) {
             throw ValidationException.create("market info update", violations);
         }
 
-        if (!id.equals(marketInfoUpdateDto.id())) {
-            throw ValidationException.create(
-                    "ID mismatch: provided ID does not match DTO ID", Set.of());
-        }
+        UUID dtoId = marketInfoUpdateDto.id();
 
-        Optional<MarketInfo> marketInfoOpt = marketInfoRepository.findById(id);
+        Optional<MarketInfo> marketInfoOpt = marketInfoRepository.findById(dtoId);
         if (marketInfoOpt.isEmpty()) {
-            throw new DatabaseAccessException("MarketInfo not found with id: " + id);
+            throw new DatabaseAccessException(
+                    "Не знайдено ринкової інформації з таким id: " + dtoId);
         }
-        MarketInfo marketInfo = marketInfoOpt.get();
 
+        MarketInfo marketInfo = marketInfoOpt.get();
         marketInfo.setPrice(marketInfoUpdateDto.price());
         marketInfo.setItemId(marketInfoUpdateDto.itemId());
         marketInfo.setType(marketInfoUpdateDto.type());
         marketInfo.setTimestamp(marketInfoUpdateDto.timestamp());
 
-        persistenceContext.registerUpdated(id, marketInfo);
+        persistenceContext.registerUpdated(dtoId, marketInfo);
         persistenceContext.commit();
         return marketInfo;
     }

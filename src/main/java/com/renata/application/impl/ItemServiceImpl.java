@@ -23,6 +23,9 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/**
+ * Реалізація сервісу для управління сутностями антикваріату, включаючи операції з файлами картинок.
+ */
 @Service
 final class ItemServiceImpl implements ItemService {
 
@@ -51,28 +54,16 @@ final class ItemServiceImpl implements ItemService {
 
         Item item = new Item();
         item.setId(UUID.randomUUID());
-        item.setName(itemStoreDto.name());
-        item.setType(itemStoreDto.type());
-        item.setDescription(itemStoreDto.description());
-        item.setProductionYear(itemStoreDto.productionYear());
-        item.setCountry(itemStoreDto.country());
-        item.setCondition(itemStoreDto.condition());
+        setItemProperties(
+                item,
+                itemStoreDto.name(),
+                itemStoreDto.type(),
+                itemStoreDto.description(),
+                itemStoreDto.productionYear(),
+                itemStoreDto.country(),
+                itemStoreDto.condition());
 
-        Path imagePath = itemStoreDto.image();
-        if (image != null && imageName != null) {
-            Path coverImagePath = fileStorageService.save(image, imageName, item.getId());
-            item.setImagePath(coverImagePath.toString());
-        } else if (imagePath != null) {
-            try (InputStream pathStream = Files.newInputStream(imagePath)) {
-                String derivedImageName = imagePath.getFileName().toString();
-                Path coverImagePath =
-                        fileStorageService.save(pathStream, derivedImageName, item.getId());
-                item.setImagePath(coverImagePath.toString());
-            } catch (Exception e) {
-                throw new FileStorageException(
-                        "Failed to process image from path: " + imagePath, e);
-            }
-        }
+        validateAndProcessImage(item, itemStoreDto.image(), image, imageName, item.getId());
 
         persistenceContext.registerNew(item);
         persistenceContext.commit();
@@ -80,65 +71,88 @@ final class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item update(UUID id, ItemUpdateDto itemUpdateDto, InputStream image, String imageName) {
-        Set<jakarta.validation.ConstraintViolation<ItemUpdateDto>> violations =
-                validator.validate(itemUpdateDto);
+    public Item update(ItemUpdateDto itemUpdateDto, InputStream image, String imageName) {
+        Set<ConstraintViolation<ItemUpdateDto>> violations = validator.validate(itemUpdateDto);
         if (!violations.isEmpty()) {
             throw ValidationException.create("item update", violations);
         }
 
-        Optional<Item> itemOpt = itemRepository.findById(id);
-        if (itemOpt.isEmpty()) {
-            throw new DatabaseAccessException("Item not found with id: " + id);
-        }
-        Item item = itemOpt.get();
+        UUID dtoId = itemUpdateDto.id();
+        Item item =
+                itemRepository
+                        .findById(dtoId)
+                        .orElseThrow(
+                                () ->
+                                        new DatabaseAccessException(
+                                                "Предмет не знайдено з таким id: " + dtoId));
 
-        item.setName(itemUpdateDto.name());
-        item.setType(itemUpdateDto.type());
-        item.setDescription(itemUpdateDto.description());
-        item.setProductionYear(itemUpdateDto.productionYear());
-        item.setCountry(itemUpdateDto.country());
-        item.setCondition(itemUpdateDto.condition());
+        setItemProperties(
+                item,
+                itemUpdateDto.name(),
+                itemUpdateDto.type(),
+                itemUpdateDto.description(),
+                itemUpdateDto.productionYear(),
+                itemUpdateDto.country(),
+                itemUpdateDto.condition());
 
-        Path imagePath = itemUpdateDto.image();
-        if (item.getImagePath() != null && (image != null || imagePath != null)) {
-            fileStorageService.delete(item.getImagePath(), id);
-        }
+        validateAndProcessImage(item, itemUpdateDto.image(), image, imageName, dtoId);
 
-        if (image != null && imageName != null) {
-            Path coverImagePath = fileStorageService.save(image, imageName, id);
-            item.setImagePath(coverImagePath.toString());
-        } else if (imagePath != null) {
-            try (InputStream pathStream = Files.newInputStream(imagePath)) {
-                String derivedImageName = imagePath.getFileName().toString();
-                Path coverImagePath = fileStorageService.save(pathStream, derivedImageName, id);
-                item.setImagePath(coverImagePath.toString());
-            } catch (Exception e) {
-                throw new FileStorageException(
-                        "Failed to process image from path: " + imagePath, e);
-            }
-        } else {
-            item.setImagePath(null);
-        }
-
-        persistenceContext.registerUpdated(id, item);
+        persistenceContext.registerUpdated(dtoId, item);
         persistenceContext.commit();
         return item;
     }
 
     @Override
     public void delete(UUID id) {
-        Optional<Item> itemOpt = itemRepository.findById(id);
-        if (itemOpt.isPresent()) {
-            Item item = itemOpt.get();
+        itemRepository
+                .findById(id)
+                .ifPresent(
+                        item -> {
+                            if (item.getImagePath() != null) {
+                                fileStorageService.delete(item.getImagePath(), id);
+                            }
+                            persistenceContext.registerDeleted(item);
+                            persistenceContext.commit();
+                        });
+    }
 
-            if (item.getImagePath() != null) {
-                fileStorageService.delete(item.getImagePath(), id);
-            }
-
-            persistenceContext.registerDeleted(item);
-            persistenceContext.commit();
+    private void validateAndProcessImage(
+            Item item, Path imagePath, InputStream image, String imageName, UUID itemId) {
+        if (item.getImagePath() != null && (image != null || imagePath != null)) {
+            fileStorageService.delete(item.getImagePath(), itemId);
         }
+
+        if (image != null && imageName != null) {
+            Path coverImagePath = fileStorageService.save(image, imageName, itemId);
+            item.setImagePath(coverImagePath.toString());
+        } else if (imagePath != null) {
+            try (InputStream pathStream = Files.newInputStream(imagePath)) {
+                String derivedImageName = imagePath.getFileName().toString();
+                Path coverImagePath = fileStorageService.save(pathStream, derivedImageName, itemId);
+                item.setImagePath(coverImagePath.toString());
+            } catch (Exception e) {
+                throw new FileStorageException(
+                        "Не вийшло обробити картинку з шляху: " + imagePath, e);
+            }
+        } else {
+            item.setImagePath(null);
+        }
+    }
+
+    private void setItemProperties(
+            Item item,
+            String name,
+            AntiqueType type,
+            String description,
+            String productionYear,
+            String country,
+            ItemCondition condition) {
+        item.setName(name);
+        item.setType(type);
+        item.setDescription(description);
+        item.setProductionYear(productionYear);
+        item.setCountry(country);
+        item.setCondition(condition);
     }
 
     @Override
@@ -153,33 +167,26 @@ final class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> findByName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return findAll(0, 100);
-        }
         return itemRepository.findByName(name);
     }
 
     @Override
     public List<Item> findByType(AntiqueType type) {
-        if (type == null) {
-            return findAll(0, 100);
-        }
         return itemRepository.findByType(type);
     }
 
     @Override
     public List<Item> findByCountry(String country) {
-        if (country == null || country.trim().isEmpty()) {
-            return findAll(0, 100);
-        }
         return itemRepository.findByCountry(country);
     }
 
     @Override
     public List<Item> findByCondition(ItemCondition condition) {
-        if (condition == null) {
-            return findAll(0, 100);
-        }
         return itemRepository.findByCondition(condition);
+    }
+
+    @Override
+    public List<Item> findItemsByCollectionId(UUID collectionId) {
+        return itemRepository.findItemsByCollectionId(collectionId);
     }
 }

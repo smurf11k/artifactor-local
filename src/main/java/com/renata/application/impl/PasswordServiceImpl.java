@@ -4,6 +4,7 @@ import com.password4j.Password;
 import com.renata.application.contract.PasswordService;
 import org.springframework.stereotype.Service;
 
+/** Реалізація сервісу для роботи з паролями. */
 @Service
 final class PasswordServiceImpl implements PasswordService {
     @Override

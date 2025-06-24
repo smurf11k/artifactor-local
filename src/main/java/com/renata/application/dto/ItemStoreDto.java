@@ -11,7 +11,8 @@ public record ItemStoreDto(
         @NotBlank(message = "Назва не може бути порожня") String name,
         @NotNull(message = "Тип має бути встановлений") AntiqueType type,
         @Size(max = 512, message = "Опис не може бути довшим за 512 символів") String description,
-        String productionYear, // set to unknown if empty
-        @Size(max = 256, message = "Країна не може бути довшою за 256 символів") String country,
+        String productionYear,
+        @Size(max = 256, message = "Назва країни не може бути довшою за 256 символів")
+                String country,
         @NotNull(message = "Стан має бути встановлений") ItemCondition condition,
         Path image) {}

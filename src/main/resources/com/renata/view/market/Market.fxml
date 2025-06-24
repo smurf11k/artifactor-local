@@ -8,17 +8,16 @@
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.market.MarketController" styleClass="root" spacing="10" alignment="TOP_CENTER">
-  <!-- Left: Filters and Chart -->
-  <VBox spacing="10" alignment="TOP_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10;">
-    <!-- Filters -->
-    <GridPane hgap="10" vgap="10" alignment="TOP_LEFT">
+<HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.renata.presentation.controller.market.MarketController" spacing="10" alignment="TOP_CENTER">
+  <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="smallPadding">
+    <!-- Фільтри -->
+    <GridPane hgap="10" vgap="10" alignment="CENTER">
       <padding>
-        <Insets top="0" right="10" bottom="10" left="0" />
+        <Insets right="10" bottom="10"/>
       </padding>
       <Label text="Пошук за назвою:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
       <TextField fx:id="searchField" promptText="Впишіть назву предмету" onAction="#applySearch" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="200"/>
-      <HBox spacing="10" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="2" alignment="TOP_LEFT">
+      <HBox spacing="10" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="2" alignment="CENTER">
         <Button fx:id="applyFilterButton" text="Застосувати" onAction="#applySearch">
           <graphic>
             <FontIcon iconLiteral="bx-filter" iconSize="16" />
@@ -36,7 +35,7 @@
         </Button>
       </HBox>
     </GridPane>
-    <!-- Price Change Diagram -->
+    <!-- Діаграма -->
     <LineChart fx:id="priceChart" title="Зміна ціни за часом" VBox.vgrow="ALWAYS">
       <xAxis>
         <CategoryAxis fx:id="xAxis" label="Час" />
@@ -46,14 +45,14 @@
       </yAxis>
     </LineChart>
   </VBox>
-  <!-- Vertical Divider -->
+  <!-- Роздільник -->
   <Separator orientation="VERTICAL" />
-  <!-- Right: Item List -->
-  <VBox spacing="10" alignment="TOP_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10;">
+  <!-- Список предметів -->
+  <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="smallPadding">
     <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
       <columns>
         <TableColumn fx:id="nameColumn" text="Назва" prefWidth="200" />
-        <TableColumn fx:id="typeColumn" text="Тип події" prefWidth="150" />
+        <TableColumn fx:id="typeColumn" text="Доступність" prefWidth="150" />
         <TableColumn fx:id="actionColumn" text="Купити" />
       </columns>
     </TableView>

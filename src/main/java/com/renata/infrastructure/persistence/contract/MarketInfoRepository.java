@@ -36,9 +36,9 @@ public interface MarketInfoRepository extends Repository<MarketInfo, UUID> {
     List<MarketInfo> findByDateRange(LocalDateTime from, LocalDateTime to);
 
     /**
-     * Deletes market info entries older than the specified date.
+     * Видаляє ринкову інформацію яка старіша за подану дату
      *
-     * @param olderThan the cutoff date
+     * @param olderThan дата
      */
     void deleteOlderThan(LocalDateTime olderThan);
 }

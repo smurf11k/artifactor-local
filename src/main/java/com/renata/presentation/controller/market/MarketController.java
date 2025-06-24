@@ -1,16 +1,24 @@
 package com.renata.presentation.controller.market;
 
 import atlantafx.base.theme.Styles;
+import com.renata.application.contract.AuthService;
 import com.renata.application.contract.ItemService;
 import com.renata.application.contract.MarketInfoService;
-import com.renata.application.dto.MarketInfoStoreDto;
+import com.renata.application.contract.TransactionService;
+import com.renata.application.dto.TransactionStoreDto;
 import com.renata.domain.entities.Item;
 import com.renata.domain.entities.MarketInfo;
 import com.renata.domain.enums.MarketEventType;
+import com.renata.domain.enums.TransactionType;
+import com.renata.domain.util.MarketInfoPriceGenerator;
+import com.renata.presentation.util.MessageManager;
+import com.renata.presentation.util.StyleManager;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -20,7 +28,6 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -37,9 +44,12 @@ import org.springframework.stereotype.Component;
 /** Контролер для відображення ринкової інформації з графіком цін та списком предметів. */
 @Component
 public class MarketController {
-    // TODO: fix purchase system - add it to the marketInfoService and don't let unauthorized users buy items
     @Autowired private MarketInfoService marketInfoService;
     @Autowired private ItemService itemService;
+    @Autowired private TransactionService transactionService;
+    @Autowired private AuthService authService;
+    @Autowired private MessageManager messageManager;
+    @Autowired private StyleManager styleManager;
 
     @FXML private TextField searchField;
     @FXML private Button applyFilterButton;
@@ -54,8 +64,7 @@ public class MarketController {
     @FXML private TableColumn<Item, Void> actionColumn;
 
     private ObservableList<Item> itemList = FXCollections.observableArrayList();
-    private static final DateTimeFormatter DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private Timeline refreshTimeline;
 
     @FXML
     public void initialize() {
@@ -64,27 +73,25 @@ public class MarketController {
                         (thread, throwable) ->
                                 Platform.runLater(
                                         () ->
-                                                showErrorAlert(
-                                                        "Unexpected Error",
-                                                        "An unexpected error occurred: "
-                                                                + throwable.getMessage())));
+                                                messageManager.showErrorAlert(
+                                                        "Невідома помилка",
+                                                        "Щось пішло не так: ",
+                                                        throwable.getMessage())));
 
         if (xAxis == null
                 || yAxis == null
                 || priceChart == null
                 || itemTable == null
                 || actionColumn == null) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
+                    "Помилка",
                     "Помилка ініціалізації",
-                    "Не вдалося ініціалізувати графік або таблицю: один або більше елементів не"
-                            + " завантажено.");
+                    "Не вдалося ініціалізувати графік або таблицю: один або більше елементів не завантажено");
             return;
         }
 
-        // Initialize chart
         priceChart.setTitle("Зміна ціни за часом");
 
-        // Initialize table
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         typeColumn.setCellValueFactory(
                 cellData -> {
@@ -98,7 +105,7 @@ public class MarketController {
                         }
                     } catch (Exception e) {
                         System.err.println(
-                                "Error fetching event type for item "
+                                "Помилка вибірки типу ринкової інформації для предмету "
                                         + item.getId()
                                         + ": "
                                         + e.getMessage());
@@ -108,7 +115,7 @@ public class MarketController {
 
         typeColumn.setCellFactory(
                 column ->
-                        new TableCell<Item, String>() {
+                        new TableCell<>() {
                             private final Text text = new Text();
 
                             @Override
@@ -119,16 +126,15 @@ public class MarketController {
                                     setText(null);
                                 } else {
                                     text.setText(type);
-                                    applyTypeStyle(text, type);
+                                    StyleManager.applyTypeStyle(text, type);
                                     setGraphic(text);
                                 }
                             }
                         });
 
-        // Initialize action column with Buy button
         actionColumn.setCellFactory(
                 column ->
-                        new TableCell<Item, Void>() {
+                        new TableCell<>() {
                             private final Button buyButton = new Button();
 
                             {
@@ -160,7 +166,7 @@ public class MarketController {
                                     } catch (Exception e) {
                                         buyButton.setDisable(true);
                                         System.err.println(
-                                                "Error checking purchase status for item "
+                                                "Помилка перевірки статусу покупки предмету "
                                                         + tableItem.getId()
                                                         + ": "
                                                         + e.getMessage());
@@ -173,7 +179,6 @@ public class MarketController {
         itemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         itemTable.setItems(itemList);
 
-        // Add selection listener to update chart on item click
         itemTable
                 .getSelectionModel()
                 .selectedItemProperty()
@@ -186,8 +191,25 @@ public class MarketController {
                             }
                         });
 
-        // Load initial data
         loadItems();
+        startAutoRefresh();
+    }
+
+    private void startAutoRefresh() {
+        refreshTimeline =
+                new Timeline(
+                        new KeyFrame(
+                                Duration.minutes(
+                                        MarketInfoPriceGenerator.SCHEDULE_INTERVAL_MINUTES),
+                                event -> Platform.runLater(this::loadItems)));
+        refreshTimeline.setCycleCount(Timeline.INDEFINITE);
+        refreshTimeline.play();
+    }
+
+    public void stopAutoRefresh() {
+        if (refreshTimeline != null) {
+            refreshTimeline.stop();
+        }
     }
 
     @FXML
@@ -210,8 +232,8 @@ public class MarketController {
             itemList.setAll(filteredItems);
             updatePriceChart(filteredItems);
         } catch (Exception e) {
-            showErrorAlert(
-                    "Помилка пошуку", "Не вийшло застосувати пошуковий запит: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка пошуку", "Не вийшло застосувати пошуковий запит: ", e.getMessage());
         }
     }
 
@@ -221,9 +243,10 @@ public class MarketController {
             searchField.clear();
             loadItems();
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Помилка очистки пошуку",
-                    "Не вийшло очистити пошуковий запит: " + e.getMessage());
+                    "Не вийшло очистити пошуковий запит: ",
+                    e.getMessage());
         }
     }
 
@@ -233,18 +256,20 @@ public class MarketController {
                     marketInfoService.findLatestMarketInfo(item.getId());
             if (latestMarketInfo.isPresent()
                     && latestMarketInfo.get().getType() == MarketEventType.PURCHASED) {
-                showErrorAlert("Помилка покупки", "Предмет уже придбано.");
+                messageManager.showErrorAlert("Помилка покупки", "Предмет уже придбано.", "");
                 return;
             }
 
             double price = latestMarketInfo.isPresent() ? latestMarketInfo.get().getPrice() : 0.0;
-            MarketInfoStoreDto purchaseDto =
-                    new MarketInfoStoreDto(
-                            price, item.getId(), LocalDateTime.now(), MarketEventType.PURCHASED);
+            TransactionStoreDto transactionDto =
+                    new TransactionStoreDto(
+                            authService.getCurrentUser().getId(),
+                            item.getId(),
+                            TransactionType.PURCHASE,
+                            LocalDateTime.now());
 
-            marketInfoService.create(purchaseDto);
+            transactionService.create(transactionDto);
 
-            // Refresh table and chart
             itemTable.refresh();
             Item selectedItem = itemTable.getSelectionModel().getSelectedItem();
             if (selectedItem != null && selectedItem.getId().equals(item.getId())) {
@@ -253,15 +278,17 @@ public class MarketController {
                 updatePriceChart(itemList);
             }
 
-            showInfoAlert(
+            messageManager.showInfoAlert(
                     "Успішна покупка",
                     "Предмет '"
                             + item.getName()
                             + "' успішно придбано за "
                             + String.format("%.2f", price)
-                            + " USD.");
+                            + " USD.",
+                    "");
         } catch (Exception e) {
-            showErrorAlert("Помилка покупки", "Не вдалося придбати предмет: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка покупки", "Не вдалося придбати предмет: ", e.getMessage());
         }
     }
 
@@ -272,9 +299,10 @@ public class MarketController {
             itemList.addAll(items);
             updatePriceChart(items);
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Помилка завантаження предметів",
-                    "Не вийшло завантажити предмети: " + e.getMessage());
+                    "Не вийшло завантажити предмети: ",
+                    e.getMessage());
         }
     }
 
@@ -287,13 +315,12 @@ public class MarketController {
                 XYChart.Series<String, Number> series = new XYChart.Series<>();
                 series.setName("Ціна предмета " + item.getId());
 
-                marketInfos.sort((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()));
+                marketInfos.sort(Comparator.comparing(MarketInfo::getTimestamp));
                 for (MarketInfo info : marketInfos) {
-                    String timestamp = info.getTimestamp().format(DATE_TIME_FORMATTER);
+                    String timestamp = info.getTimestamp().format(styleManager.DATE_TIME_FORMATTER);
                     Double price = info.getPrice();
                     XYChart.Data<String, Number> data = new XYChart.Data<>(timestamp, price);
 
-                    // Create and attach tooltip with immediate show
                     Tooltip tooltip =
                             new Tooltip(String.format("Ціна: %.2f\nЧас: %s", price, timestamp));
                     tooltip.setShowDelay(Duration.ZERO);
@@ -302,7 +329,6 @@ public class MarketController {
                     series.getData().add(data);
                 }
 
-                // Ensure tooltips are applied after nodes are rendered
                 Platform.runLater(
                         () -> {
                             for (XYChart.Data<String, Number> data : series.getData()) {
@@ -310,7 +336,7 @@ public class MarketController {
                                     Tooltip tooltip =
                                             new Tooltip(
                                                     String.format(
-                                                            "Ціна: %.2f\nЧас: %s",
+                                                            "Ціна: %.2f%nЧас: %s",
                                                             data.getYValue().doubleValue(),
                                                             data.getXValue()));
                                     tooltip.setShowDelay(Duration.ZERO);
@@ -324,54 +350,8 @@ public class MarketController {
                 }
             }
         } catch (Exception e) {
-            showErrorAlert(
-                    "Помилка оновлення графіку", "Не вийшло оновити графік цін: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка оновлення графіку", "Не вийшло оновити графік цін: ", e.getMessage());
         }
-    }
-
-    private void applyTypeStyle(Text text, String type) {
-        text.getStyleClass().clear();
-        text.getStyleClass().add(Styles.TEXT);
-
-        if (type != null) {
-            switch (type) {
-                case "LISTED":
-                    text.getStyleClass().add(Styles.ACCENT);
-                    break;
-                case "RELISTED":
-                    text.getStyleClass().add(Styles.WARNING);
-                    break;
-                case "PRICE_UPDATED":
-                    text.getStyleClass().add(Styles.SUCCESS);
-                    break;
-                case "PURCHASED":
-                    text.getStyleClass().add(Styles.DANGER);
-                    break;
-                default:
-                    text.getStyleClass().add(Styles.TEXT_SUBTLE);
-            }
-        }
-    }
-
-    private void showErrorAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Помилка");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
-    }
-
-    private void showInfoAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Успіх");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
     }
 }

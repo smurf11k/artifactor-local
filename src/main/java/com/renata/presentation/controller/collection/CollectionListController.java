@@ -4,12 +4,14 @@ import atlantafx.base.theme.Styles;
 import com.renata.application.contract.AuthService;
 import com.renata.application.contract.CollectionService;
 import com.renata.application.contract.UserService;
-import com.renata.application.exception.AuthException;
 import com.renata.domain.entities.Collection;
 import com.renata.domain.entities.User;
+import com.renata.presentation.controller.MainController;
+import com.renata.presentation.controller.item.ItemListController;
+import com.renata.presentation.util.MessageManager;
 import com.renata.presentation.util.SpringFXMLLoader;
+import com.renata.presentation.util.StyleManager;
 import java.net.URL;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +40,9 @@ public class CollectionListController {
     @Autowired private UserService userService;
     @Autowired private AuthService authService;
     @Autowired private ApplicationContext context;
+    @Autowired private MainController mainController;
+    @Autowired private MessageManager messageManager;
+    @Autowired private StyleManager styleManager;
 
     @FXML private TableView<Collection> collectionTable;
     @FXML private TableColumn<Collection, String> nameColumn;
@@ -52,8 +57,6 @@ public class CollectionListController {
     @FXML private Button refreshButton;
 
     private ObservableList<Collection> collectionList = FXCollections.observableArrayList();
-    private static final DateTimeFormatter DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @FXML
     public void initialize() {
@@ -62,10 +65,10 @@ public class CollectionListController {
                         (thread, throwable) ->
                                 Platform.runLater(
                                         () ->
-                                                showErrorAlert(
-                                                        "Unexpected Error",
-                                                        "An unexpected error occurred: "
-                                                                + throwable.getMessage())));
+                                                messageManager.showErrorAlert(
+                                                        "Невідома помилка",
+                                                        "Щось пішло не так: ",
+                                                        throwable.getMessage())));
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         usernameColumn.setCellValueFactory(
@@ -85,7 +88,9 @@ public class CollectionListController {
         createdAtColumn.setCellValueFactory(
                 cellData ->
                         new SimpleObjectProperty<>(
-                                cellData.getValue().getCreatedAt().format(DATE_TIME_FORMATTER)));
+                                cellData.getValue()
+                                        .getCreatedAt()
+                                        .format(styleManager.DATE_TIME_FORMATTER)));
 
         actionsColumn.setCellFactory(
                 param ->
@@ -131,14 +136,44 @@ public class CollectionListController {
                             }
                         });
 
+        collectionTable.setOnMouseClicked(
+                event -> {
+                    if (event.getClickCount() == 2
+                            && collectionTable.getSelectionModel().getSelectedItem() != null) {
+                        Collection selectedCollection =
+                                collectionTable.getSelectionModel().getSelectedItem();
+                        handleDoubleClick(selectedCollection);
+                    }
+                });
+
         collectionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         collectionTable.setItems(collectionList);
         loadCollections();
     }
 
+    private void handleDoubleClick(Collection collection) {
+        if (authService.getCurrentUser() == null) {
+            return;
+        }
+        try {
+            SpringFXMLLoader loader = new SpringFXMLLoader(context);
+            URL fxmlUrl = getClass().getResource("/com/renata/view/item/ItemList.fxml");
+            if (fxmlUrl == null) {
+                throw new Exception("ItemList.fxml не знайдено.");
+            }
+            Parent root = (Parent) loader.load(fxmlUrl);
+            mainController.switchPage("/com/renata/view/item/ItemList.fxml");
+            mainController.handleItemListSelection();
+            ItemListController itemListController = context.getBean(ItemListController.class);
+            itemListController.loadItemsByCollection(collection.getId());
+        } catch (Exception e) {
+            messageManager.showErrorAlert(
+                    "Не вийшло відкрити список предметів", "Помилка: ", e.getMessage());
+        }
+    }
+
     @FXML
     private void onRefresh() {
-        clearFilters();
         loadCollections();
     }
 
@@ -167,9 +202,10 @@ public class CollectionListController {
 
             collectionList.setAll(filteredCollections);
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Помилка застосування фільтрів",
-                    "Не вийшло застосувати фільтри: " + e.getMessage());
+                    "Не вийшло застосувати фільтри: ",
+                    e.getMessage());
         }
     }
 
@@ -180,18 +216,22 @@ public class CollectionListController {
             usernameFilter.clear();
             loadCollections();
         } catch (Exception e) {
-            showErrorAlert(
-                    "Помилка очистки фільтрів", "Не вийшло очистити фільтри: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка очистки фільтрів", "Не вийшло очистити фільтри: ", e.getMessage());
         }
     }
 
     @FXML
     private void handleAdd() {
         try {
+            if (authService.getCurrentUser() == null) {
+                return;
+            }
+
             SpringFXMLLoader loader = new SpringFXMLLoader(context);
             URL fxmlUrl = getClass().getResource("/com/renata/view/collection/AddCollection.fxml");
             if (fxmlUrl == null) {
-                throw new Exception("AddCollection.fxml not found");
+                throw new Exception("AddCollection.fxml не знайдено.");
             }
             Parent root = (Parent) loader.load(fxmlUrl);
             CollectionController controller = context.getBean(CollectionController.class);
@@ -199,29 +239,22 @@ public class CollectionListController {
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
             stage.setScene(new Scene(root));
+            root.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
             stage.setTitle("Додавання нової колекції");
-            stage.setOnHidden(event -> loadCollections()); // Refresh table after add
+            stage.setOnHidden(event -> loadCollections());
             stage.show();
         } catch (Exception e) {
-            showErrorAlert(
-                    "Не вийшло відкрити вікно додавання колекції", "Помилка: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Не вийшло відкрити вікно додавання колекції", "Помилка: ", e.getMessage());
         }
     }
 
     private void handleEdit(Collection collection) {
         try {
-            // Check if the current user is authorized to edit this collection
-            UUID currentUserId = authService.getCurrentUser().getId();
-            if (!collection.getUserId().equals(currentUserId)) {
-                showErrorAlert(
-                        "Немає доступу", "Ви не маєте дозволу на редагування цієї колекції.");
-                return;
-            }
-
             SpringFXMLLoader loader = new SpringFXMLLoader(context);
             URL fxmlUrl = getClass().getResource("/com/renata/view/collection/AddCollection.fxml");
             if (fxmlUrl == null) {
-                throw new Exception("AddCollection.fxml not found");
+                throw new Exception("AddCollection.fxml не знайдено.");
             }
             Parent root = (Parent) loader.load(fxmlUrl);
             CollectionController controller = context.getBean(CollectionController.class);
@@ -229,16 +262,13 @@ public class CollectionListController {
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/logo.png")));
             stage.setScene(new Scene(root));
+            root.getStylesheets().add(getClass().getResource("/css/app.css").toExternalForm());
             stage.setTitle("Редагування колекції");
-            stage.setOnHidden(event -> loadCollections()); // Refresh table after edit
+            stage.setOnHidden(event -> loadCollections());
             stage.show();
-        } catch (AuthException e) {
-            showErrorAlert(
-                    "Помилка авторизації",
-                    "Не вдалося перевірити права доступу: " + e.getMessage());
         } catch (Exception e) {
-            showErrorAlert(
-                    "Не вийшло відкрити вікно редагування колекції", "Помилка: " + e.getMessage());
+            messageManager.showErrorAlert(
+                    "Не вийшло відкрити вікно редагування колекції", "Помилка: ", e.getMessage());
         }
     }
 
@@ -246,16 +276,17 @@ public class CollectionListController {
         try {
             collectionService.delete(collection.getId());
             loadCollections();
-            showInfoAlert(
+            messageManager.showInfoAlert(
                     "Колекцію видалено",
-                    "Колекцію з ID '" + collection.getId() + "' успішно видалено.");
+                    "Колекцію з ID '" + collection.getId() + "' успішно видалено.",
+                    "");
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Не вийшло видалити колекцію",
                     "Помилка видалення колекції з ID '"
                             + (collection != null ? collection.getId() : "unknown")
-                            + "': "
-                            + e.getMessage());
+                            + "': ",
+                    e.getMessage());
         }
     }
 
@@ -265,31 +296,10 @@ public class CollectionListController {
             collectionList.clear();
             collectionList.addAll(collections);
         } catch (Exception e) {
-            showErrorAlert(
+            messageManager.showErrorAlert(
                     "Не вийшло завантажити колекції",
-                    "Помилка завантаження колекцій: " + e.getMessage());
+                    "Помилка завантаження колекцій: ",
+                    e.getMessage());
         }
-    }
-
-    private void showInfoAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Успіх");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
-    }
-
-    private void showErrorAlert(String header, String content) {
-        Platform.runLater(
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Помилка");
-                    alert.setHeaderText(header);
-                    alert.setContentText(content);
-                    alert.showAndWait();
-                });
     }
 }

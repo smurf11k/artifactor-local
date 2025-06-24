@@ -6,7 +6,7 @@ import com.renata.domain.entities.User;
 import java.util.List;
 import java.util.UUID;
 
-/** Інтерфейс для роботи з користувачами системи. */
+/** Сервіс для роботи з користувачами системи. */
 public interface UserService {
     /**
      * Знаходить користувача за ідентифікатором.

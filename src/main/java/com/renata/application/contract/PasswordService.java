@@ -1,6 +1,6 @@
 package com.renata.application.contract;
 
-/** Інтерфейс для роботи з паролями. */
+/** Сервіс для роботи з паролями. */
 public interface PasswordService {
     /**
      * Генерує хеш пароля.
