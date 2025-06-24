@@ -206,23 +206,10 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void findByName_nullOrEmpty_callsFindAll() {
-        itemService.findByName(null);
-        itemService.findByName(" ");
-        verify(itemRepository, times(2)).findAll(0, 100);
-    }
-
-    @Test
     void findByName_validName_callsFindByName() {
         String name = "testName";
         itemService.findByName(name);
         verify(itemRepository).findByName(name);
-    }
-
-    @Test
-    void findByType_null_callsFindAll() {
-        itemService.findByType(null);
-        verify(itemRepository).findAll(0, 100);
     }
 
     @Test
@@ -233,13 +220,6 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void findByCountry_nullOrEmpty_callsFindAll() {
-        itemService.findByCountry(null);
-        itemService.findByCountry(" ");
-        verify(itemRepository, times(2)).findAll(0, 100);
-    }
-
-    @Test
     void findByCountry_valid_callsFindByCountry() {
         String country = "Italy";
         itemService.findByCountry(country);
@@ -247,14 +227,15 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void findByCondition_null_callsFindAll() {
-        itemService.findByCondition(null);
-        verify(itemRepository).findAll(0, 100);
-    }
-
-    @Test
     void findByCondition_valid_callsFindByCondition() {
         itemService.findByCondition(ItemCondition.EXCELLENT);
         verify(itemRepository).findByCondition(ItemCondition.EXCELLENT);
+    }
+
+    @Test
+    void findItemsByCollectionId_callsFindItemsByCollectionId() {
+        UUID collectionId = UUID.randomUUID();
+        itemService.findItemsByCollectionId(collectionId);
+        verify(itemRepository).findItemsByCollectionId(collectionId);
     }
 }

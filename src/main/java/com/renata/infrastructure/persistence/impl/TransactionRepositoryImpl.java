@@ -63,7 +63,7 @@ final class TransactionRepositoryImpl extends GenericRepository<Transaction, UUI
 
             return transaction;
         } catch (Exception e) {
-            throw new DatabaseAccessException("Error mapping ResultSet to Transaction", e);
+            throw new DatabaseAccessException("Помилка зіставлення ResultSet з транзакції", e);
         }
     }
 }

@@ -32,7 +32,6 @@ public class CollectionManagerController {
     private Item selectedItem;
     private ObservableList<Collection> collections = FXCollections.observableArrayList();
 
-
     public void setSelectedItem(Item item) {
         this.selectedItem = item;
         loadCollections();
@@ -101,7 +100,8 @@ public class CollectionManagerController {
             try {
                 collectionService.attachItemToCollection(
                         selectedCollection.getId(), selectedItem.getId());
-                messageManager.showInfoAlert("Успіх", "Додано до колекції", "Предмет додано до колекції.");
+                messageManager.showInfoAlert(
+                        "Успіх", "Додано до колекції", "Предмет додано до колекції.");
                 updateButtonStates(selectedCollection);
             } catch (Exception e) {
                 messageManager.showErrorAlert(
@@ -119,7 +119,8 @@ public class CollectionManagerController {
             try {
                 collectionService.detachItemFromCollection(
                         selectedCollection.getId(), selectedItem.getId());
-                messageManager.showInfoAlert("Успіх", "Видалено з колекції", "Предмет успішно видалено з колекції.");
+                messageManager.showInfoAlert(
+                        "Успіх", "Видалено з колекції", "Предмет успішно видалено з колекції.");
                 updateButtonStates(selectedCollection);
             } catch (Exception e) {
                 messageManager.showErrorAlert(

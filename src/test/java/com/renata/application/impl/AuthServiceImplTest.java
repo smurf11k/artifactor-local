@@ -158,6 +158,6 @@ class AuthServiceImplTest {
                 assertThrows(
                         AuthException.class,
                         () -> authService.validatePermission(Role.EntityName.ITEM, "delete"));
-        assertTrue(ex.getMessage().contains("Required delete permission"));
+        assertTrue(ex.getMessage().contains("вам не надано"));
     }
 }

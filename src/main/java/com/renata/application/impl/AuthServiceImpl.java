@@ -84,7 +84,7 @@ final class AuthServiceImpl implements AuthService {
     public void validatePermission(Role.EntityName entity, String action) throws AuthException {
         if (!hasPermission(entity, action)) {
             throw new AuthException(
-                    String.format("Потрібний %s дозвіл для %s not вам не надано", action, entity));
+                    String.format("Потрібний %s дозвіл для %s вам не надано", action, entity));
         }
     }
 }

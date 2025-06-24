@@ -319,7 +319,7 @@ public class TransactionListController {
             messageManager.showInfoAlert(
                     "Успіх",
                     "Транзакцію видалено",
-                "Транзакцію з ID '" + transaction.getId() + "' успішно видалено.");
+                    "Транзакцію з ID '" + transaction.getId() + "' успішно видалено.");
         } catch (Exception e) {
             messageManager.showErrorAlert(
                     "Не вийшло видалити транзакцію",

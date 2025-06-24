@@ -224,7 +224,9 @@ public class ItemListController {
             }
         } catch (Exception e) {
             messageManager.showErrorAlert(
-                    "Помилка завантаження", "Не вийшло завантажити предмети для колекції: ", e.getMessage());
+                    "Помилка завантаження",
+                    "Не вийшло завантажити предмети для колекції: ",
+                    e.getMessage());
         }
     }
 
@@ -265,7 +267,9 @@ public class ItemListController {
                     marketInfoService.findLatestMarketInfo(item.getId());
             if (marketInfoOpt.isEmpty()) {
                 messageManager.showErrorAlert(
-                        "Помилка продажу", "Не знайдено ринкової інформації для предмету: ", item.getName());
+                        "Помилка продажу",
+                        "Не знайдено ринкової інформації для предмету: ",
+                        item.getName());
                 return;
             }
             TransactionStoreDto transactionDto =
@@ -275,7 +279,7 @@ public class ItemListController {
             messageManager.showInfoAlert(
                     "Продаж",
                     "Предмет продано",
-                "Предмет '" + item.getName() + "' успішно продано.");
+                    "Предмет '" + item.getName() + "' успішно продано.");
             loadItems();
         } catch (Exception e) {
             messageManager.showErrorAlert(
@@ -323,7 +327,9 @@ public class ItemListController {
                     itemImage.setImage(fallback);
                 } catch (Exception ex) {
                     messageManager.showErrorAlert(
-                            "Помилка зображення", "Не вийшло завантажити резервне зображення: ", ex.getMessage());
+                            "Помилка зображення",
+                            "Не вийшло завантажити резервне зображення: ",
+                            ex.getMessage());
                 }
             }
             nameLabel.setText(
@@ -366,7 +372,9 @@ public class ItemListController {
                 priceLabel.setText("Ціна: N/A");
                 timestampLabel.setText("Останнє оновлення ціни: N/A");
                 messageManager.showErrorAlert(
-                        "Помилка ринкової інформації", "Не вийшло завантажити рикнову інформацію: ", e.getMessage());
+                        "Помилка ринкової інформації",
+                        "Не вийшло завантажити рикнову інформацію: ",
+                        e.getMessage());
             }
             User currentUser = authService.getCurrentUser();
             boolean isAdmin =
@@ -464,7 +472,9 @@ public class ItemListController {
             itemList.setAll(filteredItems);
         } catch (Exception e) {
             messageManager.showErrorAlert(
-                    "Помилка застосування фільтрів", "Не вийшло застосувати фільтри: ", e.getMessage());
+                    "Помилка застосування фільтрів",
+                    "Не вийшло застосувати фільтри: ",
+                    e.getMessage());
         }
     }
 
@@ -493,7 +503,9 @@ public class ItemListController {
                 if (!authService.hasPermission(Role.EntityName.ITEM, "update")
                         || currentUser.getRole() != Role.ADMIN) {
                     messageManager.showErrorAlert(
-                            "Помилка", "Немає доступу", "Ви не маєте дозволу на редагування предмета.");
+                            "Помилка",
+                            "Немає доступу",
+                            "Ви не маєте дозволу на редагування предмета.");
                     return;
                 }
                 authService.validatePermission(Role.EntityName.ITEM, "update");
@@ -519,7 +531,9 @@ public class ItemListController {
                         e.getMessage());
             } catch (Exception e) {
                 messageManager.showErrorAlert(
-                        "Помилка редагування", "Не вийшло відкрити вікно редагування: ", e.getMessage());
+                        "Помилка редагування",
+                        "Не вийшло відкрити вікно редагування: ",
+                        e.getMessage());
             }
         }
     }
@@ -535,7 +549,9 @@ public class ItemListController {
                 if (!authService.hasPermission(Role.EntityName.ITEM, "delete")
                         || currentUser.getRole() != Role.ADMIN) {
                     messageManager.showErrorAlert(
-                            "Помилка", "Немає доступу", "Ви не маєте дозволу на видалення предмета.");
+                            "Помилка",
+                            "Немає доступу",
+                            "Ви не маєте дозволу на видалення предмета.");
                     return;
                 }
                 authService.validatePermission(Role.EntityName.ITEM, "delete");
@@ -544,7 +560,7 @@ public class ItemListController {
                 messageManager.showInfoAlert(
                         "Успіх",
                         "Предмет видалено",
-                    "Предмет '" + selectedItem.getName() + "' успішно видалено.");
+                        "Предмет '" + selectedItem.getName() + "' успішно видалено.");
             } catch (AuthException e) {
                 messageManager.showErrorAlert(
                         "Помилка авторизації",
@@ -568,7 +584,8 @@ public class ItemListController {
                 itemTable.getSelectionModel().selectFirst();
             }
         } catch (Exception e) {
-            messageManager.showErrorAlert("Помилка завантаження", "Не вийшло завантажити предмети: ", e.getMessage());
+            messageManager.showErrorAlert(
+                    "Помилка завантаження", "Не вийшло завантажити предмети: ", e.getMessage());
         }
     }
 

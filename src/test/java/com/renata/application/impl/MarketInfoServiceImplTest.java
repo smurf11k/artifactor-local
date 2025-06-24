@@ -113,7 +113,7 @@ class MarketInfoServiceImplTest {
 
         DatabaseAccessException ex =
                 assertThrows(DatabaseAccessException.class, () -> service.update(dto));
-        assertTrue(ex.getMessage().contains("not found"));
+        assertTrue(ex.getMessage().contains("Не знайдено ринкової інформації з таким id"));
 
         verify(persistenceContext, never()).registerUpdated(any(), any());
         verify(persistenceContext, never()).commit();
