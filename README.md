@@ -1,3 +1,5 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # Antique & Coin Collection Manager
 
 > ⚠️ **Language notice**: the application interface supports **Ukrainian only**.
